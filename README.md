@@ -166,54 +166,7 @@ isolation was identical, and the console was completely silent (the dev-only rea
 basename warning does not exist in production builds). The Ember hosts confirmed they were using
 the plugin-created `host_ember_webpack` / `host_ember_vite` runtime instances.
 
-## Findings and gotchas
-
-Things that were not obvious from the docs and cost time; each is handled in the code.
-
-1. **Cross-version isolation is a `shared` config choice.** Remotes declare
-   `react`/`react-dom` as `{ singleton: false, requiredVersion: '^18' }` (or `^19`). When the
-   host's React satisfies the range the remote reuses it; otherwise it loads its own copy.
-   `singleton: true` would force the remote onto the host's React and break across majors.
-2. **`@module-federation/bridge-react`'s default entry imports `react-router-dom`** and calls
-   `useLocation()` to derive `basename`. Hosts without React Router must import from
-   `@module-federation/bridge-react/base` and pass `basename` themselves.
-3. **The bridge unmounts synchronously inside the host's effect cleanup.** With a shared React
-   instance this triggers "Attempted to synchronously unmount a root while React was already
-   rendering". Fixed on the remote side with a custom `render` that defers `unmount` by a
-   macrotask (`createDeferredUnmountRender`).
-4. **A custom `render` passed to `createBridgeComponent` is called on every update**, not just
-   on mount. It must cache roots per container or `createRoot` gets called twice on one element.
-5. **Dev-mode Vite remotes in a non-Vite host need the React Fast Refresh preamble.** The
-   plugin-react transform references `$RefreshSig$` and `__vite_plugin_react_preamble_installed__`,
-   which only a Vite host page defines. The Ember `index.html` files ship a no-op shim; built
-   remotes do not need it.
-6. **Ember does not observe `pushState`.** After the remote navigates, `router.currentURL` and
-   active `LinkTo`s go stale, and a later Ember transition to the same URL pushes a duplicate
-   history entry. The remote reports navigations through `onRouteChange`; `RemoteMount` stamps
-   `path` onto `history.state` (so Ember's `HistoryLocation` treats the URL as current and does
-   not clobber react-router's state) and calls `router.replaceWith(url)`. TanStack does not need
-   this because `@tanstack/history` patches `pushState`.
-7. **Ember route shape.** A bare glob `/remote18/*path` does not match `/remote18`, so each remote
-   gets a parent route (`/remote18`) plus a `catchall` child (`/*path`); `<RemoteMount>` lives in
-   the parent template and survives child transitions.
-8. **Glimmer components reserve `element`.** Assigning `this.element` throws in 3.28. The mount
-   target is stored as `targetElement`.
-9. **Ember 3.28 dependency pairs.** Webpack flavor: `@embroider/core|compat` 3.x with
-   `@embroider/webpack` 4.x, `ember-resolver` 8. Vite flavor: `@embroider/core|compat` 4.x with
-   `@embroider/vite` 1.x, `ember-resolver` 13 + `ember-load-initializers` 3 with the explicit
-   `compatModules` wiring in `app/app.js` (no global AMD loader under Vite). Peer warnings about
-   `ember-source` are expected and harmless here.
-10. **`ember-vite-codemod` needs `testem.js` and a `tests/` tree** to exist even if unused; it also
-    reads the installed `ember-cli` version, so install before running it. It got the Vite flavor
-    most of the way; the remaining steps (`ember-cli-build.js`, `package.json`, `app/app.js`) were
-    finished by hand following its README.
-11. **Dev-only noise:** when the browser goes back/forward from one remote's prefix to the other,
-    react-router logs `<Router basename="/remote19"> is not able to match the URL` in the instant
-    before the host unmounts it. Harmless; production builds strip the warning.
-
 ## Not covered
 
-- `memoryRoute` (remote with an in-memory router, host owns the URL). One prop away but out of
-  scope for this POC.
 - Deploying to real origins / CDNs. Remote URLs are hardcoded to `localhost` ports in the host
   build configs.
