@@ -7,7 +7,8 @@
   "scripts": {
     "build": "vite build",
     "dev": "vite --port 4201 --strictPort",
-    "start": "vite --port 4201 --strictPort"
+    "start": "vite --port 4201 --strictPort",
+    "preview": "vite preview --port 4201 --strictPort"
   },
   "devDependencies": {
     "@babel/core": "^7.29.0",

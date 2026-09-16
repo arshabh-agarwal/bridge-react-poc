@@ -36,6 +36,13 @@ After editing `packages/bridge-ember/src`, rerun `pnpm --filter @poc/bridge-embe
 restart the Ember dev servers (they do not watch the addon's `dist/`).
 Remotes also run standalone at their own port (basename `/`). `pnpm build` builds everything.
 
+Production bundles, on the same ports:
+
+```sh
+pnpm build
+pnpm preview      # vite preview for the Vite apps, `serve -s dist` for the webpack Ember host
+```
+
 Tested with Node 22.18 and pnpm 10. ember-cli 4.12 prints a "not tested against Node 22"
 warning; it works.
 
@@ -128,7 +135,15 @@ instance being used).
 (`globalThis.__pocReact`, a POC-only diagnostic registered by each app). Namespace identity is
 misleading here because every app gets its own `loadShare` wrapper module.
 
-All six apps also pass `pnpm build`.
+### Production bundles
+
+The same walk was repeated against `pnpm build` output served with `pnpm preview` (remotes via
+`vite preview`, so `remoteEntry.js` and `mf-manifest.json` come from `dist/`). On each of the
+four hosts: deep link into one remote, host nav into the other remote's sub-route, remote-internal
+link, back, forward, exit via `onHostNavigate`. Every step matched dev behaviour, React sharing /
+isolation was identical, and the console was completely silent (the dev-only react-router
+basename warning does not exist in production builds). The Ember hosts confirmed they were using
+the plugin-created `host_ember_webpack` / `host_ember_vite` runtime instances.
 
 ## Findings and gotchas
 
@@ -179,5 +194,5 @@ Things that were not obvious from the docs and cost time; each is handled in the
 
 - `memoryRoute` (remote with an in-memory router, host owns the URL). One prop away but out of
   scope for this POC.
-- Serving remotes from `vite preview` builds to the hosts (only `vite dev` remotes were exercised,
-  though all remotes build cleanly with `mf-manifest.json`).
+- Deploying to real origins / CDNs. Remote URLs are hardcoded to `localhost` ports in the host
+  build configs.

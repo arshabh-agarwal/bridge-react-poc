@@ -13,6 +13,7 @@
     "dev:remotes": "pnpm -r --parallel --filter './apps/remote-*' dev",
     "dev:react-hosts": "pnpm -r --parallel --filter './apps/host-react*' dev",
     "dev:ember-hosts": "pnpm -r --parallel --filter './apps/host-ember*' dev",
-    "build": "pnpm -r --filter './packages/*' --filter './apps/*' build"
+    "build": "pnpm -r --filter './packages/*' --filter './apps/*' build",
+    "preview": "pnpm -r --parallel --filter './apps/*' preview"
   }
 }
