@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useEffect, useMemo, version as reactVersion } from 'react';
-import { registerReactInstance } from './instances';
+import { registerReactInstance, unregisterReactInstance } from './instances';
 import { createBrowserRouter, RouterProvider, type RouteObject } from 'react-router';
 import { RemoteContext, type RemoteContextValue } from './context';
 import { Layout } from './routes/Layout';
@@ -42,6 +42,8 @@ export function App({
   onHostNavigate,
   onRouteChange,
 }: AppProps) {
+  registerReactInstance(remoteName, React);
+
   // The remote owns everything under `basename`. Recreate the router only if the prefix changes.
   const router = useMemo(() => createBrowserRouter(routes, { basename }), [basename]);
 
@@ -67,7 +69,10 @@ export function App({
   useEffect(() => {
     registerReactInstance(remoteName, React);
     console.log(`[${remoteName}] mounted with React ${reactVersion}, basename=${basename}`);
-    return () => console.log(`[${remoteName}] unmounted`);
+    return () => {
+      unregisterReactInstance(remoteName);
+      console.log(`[${remoteName}] unmounted`);
+    };
   }, [remoteName, basename]);
 
   return (

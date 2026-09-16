@@ -84,8 +84,13 @@ body {
 
 .hg__main {
   grid-area: main;
-  padding: 20px;
+  padding: 0;
   min-width: 0;
+  background: #fff;
+}
+
+.hg__home {
+  padding: 20px;
 }
 
 .hg__footer {
@@ -95,29 +100,4 @@ body {
   color: #71717a;
   border-top: 1px solid #e4e4e7;
   background: #fff;
-}
-
-.tabs {
-  display: flex;
-  gap: 4px;
-  border-bottom: 2px solid #e4e4e7;
-  margin-bottom: 16px;
-}
-
-.tabs a {
-  padding: 8px 14px;
-  margin-bottom: -2px;
-  border-bottom: 2px solid transparent;
-  color: #52525b;
-  text-decoration: none;
-}
-
-.tabs a:hover {
-  color: #18181b;
-}
-
-.tabs a.is-active {
-  color: #0369a1;
-  border-bottom-color: #0ea5e9;
-  font-weight: 600;
 }

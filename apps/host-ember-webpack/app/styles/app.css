@@ -85,8 +85,13 @@ body {
 
 .hg__main {
   grid-area: main;
-  padding: 20px;
+  padding: 0;
   min-width: 0;
+  background: #fff;
+}
+
+.hg__home {
+  padding: 20px;
 }
 
 .hg__footer {
@@ -98,29 +103,9 @@ body {
   background: #fff;
 }
 
-.tabs {
-  display: flex;
-  gap: 4px;
-  border-bottom: 2px solid #e4e4e7;
-  margin-bottom: 16px;
-}
-
-.tabs a {
-  padding: 8px 14px;
-  margin-bottom: -2px;
-  border-bottom: 2px solid transparent;
-  color: #52525b;
-  text-decoration: none;
-}
-
-.tabs a:hover {
-  color: #18181b;
-}
-
-.tabs a.active {
-  color: #b3311f;
-  border-bottom-color: #e04e39;
-  font-weight: 600;
+.remote-mount,
+.remote-mount__target {
+  height: 100%;
 }
 
 .remote-mount__error {

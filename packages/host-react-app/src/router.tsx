@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { version as reactVersion } from 'react';
+import { useEffect, useState, version as reactVersion } from 'react';
 import {
   createRootRouteWithContext,
   createRoute,
@@ -21,14 +21,6 @@ const REMOTES: Record<RemoteName, { label: string; sub: string; App: typeof Remo
   remote18: { label: 'React 18', sub: 'remote18 / react-router', App: Remote18App },
   remote19: { label: 'React 19', sub: 'remote19 / react-router', App: Remote19App },
 };
-
-// One tab per route the remote owns. Tabs are host links into the remote's prefix; the
-// bridge-tanstack adapter forwards the resulting location change to the remote's router.
-const TABS = [
-  { label: 'Home', splat: '', match: (rest: string) => rest === '' },
-  { label: 'About', splat: 'about', match: (rest: string) => rest === 'about' },
-  { label: 'Items', splat: 'items/7', match: (rest: string) => rest.startsWith('items/') },
-];
 
 const rootRoute = createRootRouteWithContext<HostContext>()({
   component: RootLayout,
@@ -69,6 +61,20 @@ function usePathname() {
   return useRouterState({ select: (s) => s.location.pathname });
 }
 
+function HostHooksProbe() {
+  const [ticks, setTicks] = useState(0);
+  useEffect(() => {
+    const id = window.setInterval(() => setTicks((n) => n + 1), 1000);
+    return () => window.clearInterval(id);
+  }, []);
+  return (
+    <code data-testid="host-effect-ticks">
+      host useEffect ticks={ticks}
+      {ticks > 0 ? ' · ok' : ''}
+    </code>
+  );
+}
+
 function RootLayout() {
   const { hostName } = rootRoute.useRouteContext();
   const pathname = usePathname();
@@ -80,6 +86,7 @@ function RootLayout() {
         <code>React {reactVersion}</code>
         <code>TanStack Router</code>
         <code data-testid="host-pathname">pathname={pathname}</code>
+        <HostHooksProbe />
       </header>
 
       <nav className="hg__nav" aria-label="Remotes">
@@ -106,44 +113,24 @@ function RootLayout() {
       </main>
 
       <footer className="hg__footer">
-        Host owns the shell, side nav and tabs. Everything inside the dashed box is rendered by
-        the remote's own React and react-router.
+        Host owns the header and side nav. Nothing in the main area is host UI — the remote
+        renders its own tabs, routes, and content.
       </footer>
     </div>
   );
 }
 
+// The main area is the remote's alone: the host hands over the prefix and renders nothing else.
 function RemoteShell({ remote }: { remote: RemoteName }) {
   const { App } = REMOTES[remote];
-  const basename = `/${remote}`;
-  const pathname = usePathname();
-  const rest = pathname.replace(basename, '').replace(/^\//, '');
-
-  return (
-    <>
-      <nav className="tabs" aria-label={`${remote} routes`}>
-        {TABS.map((tab) => (
-          <Link
-            activeProps={{}}
-            key={tab.label}
-            to={`${basename}/$` as '/remote18/$'}
-            params={{ _splat: tab.splat }}
-            className={tab.match(rest) ? 'is-active' : undefined}
-          >
-            {tab.label}
-          </Link>
-        ))}
-      </nav>
-      <App basename={basename} />
-    </>
-  );
+  return <App basename={`/${remote}`} />;
 }
 
 function HostHome() {
   return (
-    <div>
+    <div className="hg__home">
       <h1>Host home</h1>
-      <p>Pick a remote from the side nav. Each tab in the main area is one route owned by that remote.</p>
+      <p>Pick a remote from the side nav. The main pane is then that remote — the host renders nothing there.</p>
     </div>
   );
 }
