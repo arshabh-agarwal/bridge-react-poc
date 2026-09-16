@@ -1,0 +1,2 @@
+export { default } from './plugins/lazy-load-component-plugin';
+export * from './plugins/lazy-load-component-plugin';

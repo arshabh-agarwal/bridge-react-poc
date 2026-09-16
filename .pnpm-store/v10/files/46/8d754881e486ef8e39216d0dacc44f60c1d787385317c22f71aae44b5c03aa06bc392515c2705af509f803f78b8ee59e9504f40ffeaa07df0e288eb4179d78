@@ -1,0 +1,15 @@
+"use strict";
+Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
+const client = require("react-dom/client");
+const bridgeBase = require("./bridge-base-DSYKAGGD.js");
+function createReact19Root(container, options) {
+  return client.createRoot(container, options);
+}
+function createBridgeComponent(bridgeInfo) {
+  const fullBridgeInfo = {
+    createRoot: createReact19Root,
+    ...bridgeInfo
+  };
+  return bridgeBase.createBaseBridgeComponent(fullBridgeInfo);
+}
+exports.createBridgeComponent = createBridgeComponent;

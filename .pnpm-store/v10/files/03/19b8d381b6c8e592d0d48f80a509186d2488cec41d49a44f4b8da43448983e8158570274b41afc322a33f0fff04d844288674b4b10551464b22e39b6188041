@@ -1,0 +1,24 @@
+import React, { ReactNode } from 'react';
+import type { DataFetchParams } from './types';
+export type ErrorInfo = {
+    error: Error;
+    errorType: number;
+    dataFetchMapKey?: string;
+};
+export declare const transformError: (err: string | Error) => ErrorInfo;
+export interface AwaitProps<T> {
+    resolve: T | Promise<T>;
+    loading?: ReactNode;
+    delayLoading?: number;
+    errorElement?: ReactNode | ((errorInfo: ErrorInfo) => ReactNode);
+    children: (data: T) => ReactNode;
+    params?: DataFetchParams;
+}
+export interface AwaitErrorHandlerProps<T = any> extends Omit<AwaitProps<T>, 'resolve'> {
+    resolve: () => T | string;
+}
+export declare function AwaitDataFetch<T>({ resolve, loading, errorElement, children, params, delayLoading, }: AwaitProps<T>): React.JSX.Element;
+export declare const DelayedLoading: ({ delayLoading, children, }: {
+    delayLoading?: number;
+    children: ReactNode;
+}) => ReactNode;

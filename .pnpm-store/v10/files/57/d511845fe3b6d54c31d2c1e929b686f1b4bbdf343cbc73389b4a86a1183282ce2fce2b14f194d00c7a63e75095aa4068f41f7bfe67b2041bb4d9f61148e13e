@@ -1,0 +1,30 @@
+import { c as createRemoteAppComponentFactory, a as createDeprecatedRemoteComponentFactory, R as RemoteAppWrapper } from "./createHelpers-D3Sg5lKp.mjs";
+import { b } from "./createHelpers-D3Sg5lKp.mjs";
+import { a, c, b as b2, l } from "./lazy-load-component-plugin-CyRfqVSE.mjs";
+import { C, a as a2, E, c as c2, b as b3, d, g, r, s } from "./utils-BBP3hEeV.mjs";
+import { callDataFetch } from "./data-fetch-utils.es.js";
+import { p } from "./prefetch-xvZIEaJL.mjs";
+const createRemoteAppComponent = createRemoteAppComponentFactory(RemoteAppWrapper);
+const createRemoteComponent = createDeprecatedRemoteComponentFactory(
+  createRemoteAppComponent
+);
+export {
+  C as CacheSize,
+  a2 as CacheTime,
+  E as ERROR_TYPE,
+  a as autoFetchDataPlugin,
+  c2 as cache,
+  callDataFetch,
+  b3 as clearStore,
+  c as collectSSRAssets,
+  d as configureCache,
+  b as createBridgeComponent,
+  b2 as createLazyComponent,
+  createRemoteAppComponent,
+  createRemoteComponent,
+  g as generateKey,
+  l as lazyLoadComponentPlugin,
+  p as prefetch,
+  r as revalidateTag,
+  s as setSSREnv
+};

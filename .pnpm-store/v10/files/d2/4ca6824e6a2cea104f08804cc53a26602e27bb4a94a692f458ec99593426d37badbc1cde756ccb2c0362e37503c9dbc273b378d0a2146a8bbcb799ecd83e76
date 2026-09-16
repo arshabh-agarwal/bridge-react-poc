@@ -1,0 +1,17 @@
+import React from 'react';
+import { RemoteComponentParams, RemoteComponentProps } from '../types';
+export type LazyRemoteComponentInfo<T, _E extends keyof T> = RemoteComponentParams<T>;
+/**
+ * Creates a factory function for creating lazy remote components
+ * @param RemoteApp The RemoteAppWrapper component to use (with or without router)
+ */
+export declare function createLazyRemoteComponentFactory(RemoteApp: React.ComponentType<any>): <T = Record<string, unknown>, E extends keyof T = keyof T>(info: LazyRemoteComponentInfo<T, E>) => React.LazyExoticComponent<React.ForwardRefExoticComponent<Omit<RemoteComponentProps<Record<string, unknown>>, "ref"> & React.RefAttributes<HTMLDivElement>>>;
+/**
+ * Creates a factory function for creating remote app components
+ * @param RemoteApp The RemoteAppWrapper component to use (with or without router)
+ */
+export declare function createRemoteAppComponentFactory(RemoteApp: React.ComponentType<any>): <T = Record<string, unknown>, E extends keyof T = keyof T>(info: LazyRemoteComponentInfo<T, E>) => React.ForwardRefExoticComponent<Omit<RemoteComponentProps<Record<string, unknown>>, "ref"> & React.RefAttributes<HTMLDivElement>>;
+/**
+ * Creates the deprecated createRemoteComponent function
+ */
+export declare function createDeprecatedRemoteComponentFactory<T = Record<string, unknown>, E extends keyof T = keyof T>(createFn: (info: LazyRemoteComponentInfo<T, E>) => any): (info: LazyRemoteComponentInfo<T, E>) => any;

@@ -1,0 +1,589 @@
+import { S as SEPARATOR, c as createLogger, i as isBrowserEnvValue } from "./logger-DwWkXsWl.mjs";
+import { SizeLimitedCache } from "./size-limited-cache.es.js";
+const LOG_CATEGORY = "[ Federation Runtime ]";
+const composeKeyWithSeparator = function(...args) {
+  if (!args.length) return "";
+  return args.reduce((sum, cur) => {
+    if (!cur) return sum;
+    if (!sum) return cur;
+    return `${sum}${SEPARATOR}${cur}`;
+  }, "");
+};
+const warn = (msg) => {
+  console.warn(`${LOG_CATEGORY}: ${msg}`);
+};
+function safeToString(info) {
+  try {
+    return JSON.stringify(info, null, 2);
+  } catch (e) {
+    return "";
+  }
+}
+const PLUGIN_IDENTIFIER = "[ Module Federation React ]";
+const DOWNGRADE_KEY = "_mfSSRDowngrade";
+const DATA_FETCH_FUNCTION = "_mfDataFetch";
+const FS_HREF = "_mfFSHref";
+const ERROR_TYPE = {
+  DATA_FETCH: 1,
+  LOAD_REMOTE: 2,
+  UNKNOWN: 3
+};
+const WRAP_DATA_FETCH_ID_IDENTIFIER = "wrap_dfip_identifier";
+var MF_DATA_FETCH_TYPE = /* @__PURE__ */ ((MF_DATA_FETCH_TYPE2) => {
+  MF_DATA_FETCH_TYPE2[MF_DATA_FETCH_TYPE2["FETCH_SERVER"] = 1] = "FETCH_SERVER";
+  MF_DATA_FETCH_TYPE2[MF_DATA_FETCH_TYPE2["FETCH_CLIENT"] = 2] = "FETCH_CLIENT";
+  return MF_DATA_FETCH_TYPE2;
+})(MF_DATA_FETCH_TYPE || {});
+var MF_DATA_FETCH_STATUS = /* @__PURE__ */ ((MF_DATA_FETCH_STATUS2) => {
+  MF_DATA_FETCH_STATUS2[MF_DATA_FETCH_STATUS2["LOADED"] = 1] = "LOADED";
+  MF_DATA_FETCH_STATUS2[MF_DATA_FETCH_STATUS2["LOADING"] = 2] = "LOADING";
+  MF_DATA_FETCH_STATUS2[MF_DATA_FETCH_STATUS2["AWAIT"] = 0] = "AWAIT";
+  MF_DATA_FETCH_STATUS2[MF_DATA_FETCH_STATUS2["ERROR"] = 3] = "ERROR";
+  return MF_DATA_FETCH_STATUS2;
+})(MF_DATA_FETCH_STATUS || {});
+const DATA_FETCH_IDENTIFIER = "data";
+const DATA_FETCH_CLIENT_SUFFIX = ".client";
+const DATA_FETCH_QUERY = "x-mf-data-fetch";
+const DATA_FETCH_ERROR_PREFIX = "caught the following error during dataFetch: ";
+const LOAD_REMOTE_ERROR_PREFIX = "caught the following error during loadRemote: ";
+const logger = createLogger(PLUGIN_IDENTIFIER);
+const CacheSize = {
+  KB: 1024,
+  MB: 1024 * 1024,
+  GB: 1024 * 1024 * 1024
+};
+const CacheTime = {
+  SECOND: 1e3,
+  MINUTE: 60 * 1e3,
+  HOUR: 60 * 60 * 1e3,
+  DAY: 24 * 60 * 60 * 1e3,
+  WEEK: 7 * 24 * 60 * 60 * 1e3,
+  MONTH: 30 * 24 * 60 * 60 * 1e3
+};
+function getTagKeyMap() {
+  const dataFetchCache = getDataFetchCache();
+  if (!dataFetchCache || !dataFetchCache.tagKeyMap) {
+    const tagKeyMap = /* @__PURE__ */ new Map();
+    globalThis.__MF_DATA_FETCH_CACHE__ || (globalThis.__MF_DATA_FETCH_CACHE__ = {});
+    globalThis.__MF_DATA_FETCH_CACHE__.tagKeyMap = tagKeyMap;
+    return tagKeyMap;
+  }
+  return dataFetchCache.tagKeyMap;
+}
+function addTagKeyRelation(tag, key) {
+  const tagKeyMap = getTagKeyMap();
+  let keys = tagKeyMap.get(tag);
+  if (!keys) {
+    keys = /* @__PURE__ */ new Set();
+    tagKeyMap.set(tag, keys);
+  }
+  keys.add(key);
+}
+function getCacheConfig() {
+  const dataFetchCache = getDataFetchCache();
+  if (!dataFetchCache || !dataFetchCache.cacheConfig) {
+    const cacheConfig = {
+      maxSize: CacheSize.GB
+    };
+    globalThis.__MF_DATA_FETCH_CACHE__ || (globalThis.__MF_DATA_FETCH_CACHE__ = {});
+    globalThis.__MF_DATA_FETCH_CACHE__.cacheConfig = cacheConfig;
+    return cacheConfig;
+  }
+  return dataFetchCache.cacheConfig;
+}
+function configureCache(config) {
+  const cacheConfig = getCacheConfig();
+  Object.assign(cacheConfig, config);
+}
+function getSizeLimitedCache() {
+  const dataFetchCache = getDataFetchCache();
+  const cacheConfig = getCacheConfig();
+  if (!dataFetchCache || !dataFetchCache.cacheStore) {
+    const cacheStore = new SizeLimitedCache({
+      maxSize: cacheConfig.maxSize ?? CacheSize.GB,
+      sizeCalculation: (value) => {
+        if (!value.size) {
+          return 1;
+        }
+        let size = 0;
+        for (const [k, item] of value.entries()) {
+          size += k.length * 2;
+          size += estimateObjectSize(item.data);
+          size += 8;
+        }
+        return size;
+      }
+    });
+    globalThis.__MF_DATA_FETCH_CACHE__ || (globalThis.__MF_DATA_FETCH_CACHE__ = {});
+    globalThis.__MF_DATA_FETCH_CACHE__.cacheStore = cacheStore;
+    return cacheStore;
+  }
+  return dataFetchCache.cacheStore;
+}
+function estimateObjectSize(data) {
+  const type = typeof data;
+  if (type === "number") return 8;
+  if (type === "boolean") return 4;
+  if (type === "string") return Math.max(data.length * 2, 1);
+  if (data === null || data === void 0) return 1;
+  if (ArrayBuffer.isView(data)) {
+    return Math.max(data.byteLength, 1);
+  }
+  if (Array.isArray(data)) {
+    return Math.max(
+      data.reduce((acc, item) => acc + estimateObjectSize(item), 0),
+      1
+    );
+  }
+  if (data instanceof Map || data instanceof Set) {
+    return 1024;
+  }
+  if (data instanceof Date) {
+    return 8;
+  }
+  if (type === "object") {
+    return Math.max(
+      Object.entries(data).reduce(
+        (acc, [key, value]) => acc + key.length * 2 + estimateObjectSize(value),
+        0
+      ),
+      1
+    );
+  }
+  return 1;
+}
+function generateKey(dataFetchOptions) {
+  return JSON.stringify(dataFetchOptions, (_, value) => {
+    if (value && typeof value === "object" && !Array.isArray(value)) {
+      return Object.keys(value).sort().reduce((result, key) => {
+        result[key] = value[key];
+        return result;
+      }, {});
+    }
+    return value;
+  });
+}
+function cache(fn, options) {
+  const {
+    tag = "default",
+    maxAge = CacheTime.MINUTE * 5,
+    revalidate = 0,
+    onCache,
+    getKey
+  } = options || {};
+  const tags = Array.isArray(tag) ? tag : [tag];
+  return async (dataFetchOptions) => {
+    if (dataFetchOptions.isDowngrade || !dataFetchOptions._id) {
+      return fn(dataFetchOptions);
+    }
+    const store = getSizeLimitedCache();
+    const now = Date.now();
+    const storeKey = dataFetchOptions._id;
+    const cacheKey = getKey ? getKey(dataFetchOptions) : generateKey(dataFetchOptions);
+    tags.forEach((t) => addTagKeyRelation(t, cacheKey));
+    let cacheStore = store.get(cacheKey);
+    if (!cacheStore) {
+      cacheStore = /* @__PURE__ */ new Map();
+    }
+    const cached = cacheStore.get(storeKey);
+    if (cached) {
+      const age = now - cached.timestamp;
+      if (age < maxAge) {
+        if (onCache) {
+          const useCache = onCache({
+            status: "hit",
+            key: cacheKey,
+            params: dataFetchOptions,
+            result: cached.data
+          });
+          if (!useCache) {
+            return fn(dataFetchOptions);
+          }
+        }
+        return cached.data;
+      }
+      if (revalidate > 0 && age < maxAge + revalidate) {
+        if (onCache) {
+          onCache({
+            status: "stale",
+            key: cacheKey,
+            params: dataFetchOptions,
+            result: cached.data
+          });
+        }
+        if (!cached.isRevalidating) {
+          cached.isRevalidating = true;
+          Promise.resolve().then(async () => {
+            try {
+              const newData = await fn(dataFetchOptions);
+              cacheStore.set(storeKey, {
+                data: newData,
+                timestamp: Date.now(),
+                isRevalidating: false
+              });
+              store.set(cacheKey, cacheStore);
+            } catch (error) {
+              cached.isRevalidating = false;
+              console.error("Background revalidation failed:", error);
+            }
+          });
+        }
+        return cached.data;
+      }
+    }
+    const data = await fn(dataFetchOptions);
+    cacheStore.set(storeKey, {
+      data,
+      timestamp: now,
+      isRevalidating: false
+    });
+    store.set(cacheKey, cacheStore);
+    if (onCache) {
+      onCache({
+        status: "miss",
+        key: cacheKey,
+        params: dataFetchOptions,
+        result: data
+      });
+    }
+    return data;
+  };
+}
+function revalidateTag(tag) {
+  const tagKeyMap = getTagKeyMap();
+  const keys = tagKeyMap.get(tag);
+  const cacheStore = getSizeLimitedCache();
+  if (keys) {
+    keys.forEach((key) => {
+      cacheStore == null ? void 0 : cacheStore.delete(key);
+    });
+  }
+}
+function clearStore() {
+  var _a;
+  const cacheStore = getSizeLimitedCache();
+  const tagKeyMap = getTagKeyMap();
+  cacheStore == null ? void 0 : cacheStore.clear();
+  (_a = globalThis.__MF_DATA_FETCH_CACHE__) == null ? true : delete _a.cacheStore;
+  tagKeyMap.clear();
+}
+const getDataFetchInfo = ({
+  name,
+  alias,
+  id,
+  remoteSnapshot
+}) => {
+  if (!remoteSnapshot) {
+    return;
+  }
+  if (!("modules" in remoteSnapshot)) {
+    return;
+  }
+  const regex = new RegExp(`^${name}(/[^/].*|)$`);
+  const nameOrAlias = regex.test(id) ? name : alias || name;
+  const expose = id.replace(nameOrAlias, "");
+  let dataFetchName = "";
+  let dataFetchId = "";
+  let dataFetchKey = "";
+  if (expose.startsWith("/")) {
+    dataFetchName = `${expose.slice(1)}.${DATA_FETCH_IDENTIFIER}`;
+    dataFetchId = `${id}.${DATA_FETCH_IDENTIFIER}`;
+    dataFetchKey = `${name}${expose}.${DATA_FETCH_IDENTIFIER}`;
+  } else if (expose === "") {
+    dataFetchName = DATA_FETCH_IDENTIFIER;
+    dataFetchId = `${id}/${DATA_FETCH_IDENTIFIER}`;
+    dataFetchKey = `${name}/${DATA_FETCH_IDENTIFIER}`;
+  } else {
+    return;
+  }
+  if (!dataFetchName || !dataFetchId || !dataFetchKey) {
+    return;
+  }
+  if (!remoteSnapshot.modules.find(
+    (module) => module.moduleName === dataFetchName
+  )) {
+    return;
+  }
+  return {
+    dataFetchName,
+    dataFetchId,
+    dataFetchKey
+  };
+};
+function initDataFetchMap() {
+  globalThis.__MF_DATA_FETCH_MAP__ || (globalThis.__MF_DATA_FETCH_MAP__ = {});
+}
+function getDataFetchItem(id) {
+  var _a;
+  return (_a = globalThis.__MF_DATA_FETCH_MAP__) == null ? void 0 : _a[id];
+}
+function getDataFetchMap() {
+  return globalThis.__MF_DATA_FETCH_MAP__;
+}
+function getDataFetchCache() {
+  return globalThis.__MF_DATA_FETCH_CACHE__;
+}
+const flushDataFetch = () => {
+  globalThis.__MF_DATA_FETCH_MAP__ = {};
+  globalThis[DOWNGRADE_KEY] = void 0;
+  clearStore();
+};
+function setDataFetchItemLoadedStatus(id) {
+  const dataFetchItem = getDataFetchItem(id);
+  if (!dataFetchItem) {
+    return;
+  }
+  dataFetchItem[2] = MF_DATA_FETCH_STATUS.LOADED;
+}
+const wrapDataFetchId = (id) => {
+  return `${WRAP_DATA_FETCH_ID_IDENTIFIER}${id}${WRAP_DATA_FETCH_ID_IDENTIFIER}`;
+};
+const getDataFetchIdWithErrorMsgs = (errMsgs) => {
+  const firstIdentifierIndex = errMsgs.indexOf(WRAP_DATA_FETCH_ID_IDENTIFIER);
+  if (firstIdentifierIndex === -1) {
+    return void 0;
+  }
+  const secondIdentifierIndex = errMsgs.indexOf(
+    WRAP_DATA_FETCH_ID_IDENTIFIER,
+    firstIdentifierIndex + WRAP_DATA_FETCH_ID_IDENTIFIER.length
+  );
+  if (secondIdentifierIndex === -1) {
+    return void 0;
+  }
+  return errMsgs.substring(
+    firstIdentifierIndex + WRAP_DATA_FETCH_ID_IDENTIFIER.length,
+    secondIdentifierIndex
+  );
+};
+async function fetchData(id, params, remoteInfo) {
+  var _a;
+  const callFetchData = async () => {
+    const item = getDataFetchItem(id);
+    if (!item) {
+      return;
+    }
+    const [fetchDataFnArr, ..._rest] = item;
+    const fetchDataFn = await fetchDataFnArr[2];
+    if (!fetchDataFn) {
+      return;
+    }
+    return fetchDataFn({
+      ...params,
+      _id: id
+    });
+  };
+  if (isBrowserEnvValue) {
+    const dataFetchItem = getDataFetchItem(id);
+    if (!dataFetchItem) {
+      throw new Error(`dataFetchItem not found, id: ${id}`);
+    }
+    if ((_a = dataFetchItem[1]) == null ? void 0 : _a[0]) {
+      return dataFetchItem[1][0];
+    }
+    if (isCSROnly()) {
+      logger.debug("==========csr only!");
+      return callFetchData();
+    }
+    if (remoteInfo) {
+      return callDowngrade(id, params, remoteInfo);
+    }
+    const mfDowngrade = getDowngradeTag();
+    if (mfDowngrade && (typeof mfDowngrade === "boolean" || mfDowngrade.includes(id))) {
+      return callDowngrade(id, { ...params, isDowngrade: true });
+    }
+    let res;
+    let rej;
+    const p = new Promise((resolve, reject) => {
+      res = resolve;
+      rej = reject;
+    });
+    dataFetchItem[1] = [p, res, rej];
+    dataFetchItem[2] = MF_DATA_FETCH_STATUS.AWAIT;
+    return dataFetchItem[1][0];
+  }
+  return callFetchData();
+}
+function getDataFetchMapKey(dataFetchInfo, hostInfo) {
+  if (!dataFetchInfo || !hostInfo) {
+    return;
+  }
+  const { dataFetchKey } = dataFetchInfo;
+  return composeKeyWithSeparator(dataFetchKey, hostInfo.name, hostInfo.version);
+}
+async function loadDataFetchModule(instance, id) {
+  return instance.loadRemote(id).then((m) => {
+    if (m && typeof m === "object" && "fetchData" in m && typeof m.fetchData === "function") {
+      return m.fetchData;
+    }
+    throw new Error(
+      `fetchData not found in remote ${id}, ${JSON.stringify(m)}`
+    );
+  });
+}
+function isDataLoaderExpose(exposeKey) {
+  return exposeKey.endsWith(DATA_FETCH_IDENTIFIER) || exposeKey.endsWith(DATA_FETCH_CLIENT_SUFFIX);
+}
+function getDowngradeTag() {
+  return globalThis[DOWNGRADE_KEY];
+}
+function callAllDowngrade() {
+  const dataFetchMap = getDataFetchMap();
+  if (!dataFetchMap) {
+    return;
+  }
+  Object.keys(dataFetchMap).forEach((key) => {
+    callDowngrade(key);
+  });
+}
+async function callDowngrade(id, params, remoteInfo) {
+  const dataFetchMap = getDataFetchMap();
+  if (!dataFetchMap) {
+    return;
+  }
+  const mfDataFetch = dataFetchMap[id];
+  if ((mfDataFetch == null ? void 0 : mfDataFetch[2]) === MF_DATA_FETCH_STATUS.AWAIT) {
+    mfDataFetch[2] = MF_DATA_FETCH_STATUS.LOADING;
+    let promise;
+    let res;
+    let rej;
+    if (mfDataFetch[1]) {
+      promise = mfDataFetch[1][0];
+      res = mfDataFetch[1][1];
+      rej = mfDataFetch[1][2];
+    } else {
+      promise = new Promise((resolve, reject) => {
+        res = resolve;
+        rej = reject;
+      });
+      mfDataFetch[1] = [promise, res, rej];
+    }
+    const dataFetchType = mfDataFetch[0][1];
+    if (dataFetchType === MF_DATA_FETCH_TYPE.FETCH_CLIENT) {
+      try {
+        mfDataFetch[0][0]().then(async (getDataFetchFn) => {
+          return getDataFetchFn({
+            ...params,
+            isDowngrade: true,
+            _id: id
+          }).then((data) => {
+            mfDataFetch[2] = MF_DATA_FETCH_STATUS.LOADED;
+            res && res(data);
+          });
+        });
+      } catch (e) {
+        mfDataFetch[2] = MF_DATA_FETCH_STATUS.ERROR;
+        rej && rej(e);
+      }
+    } else if (dataFetchType === MF_DATA_FETCH_TYPE.FETCH_SERVER) {
+      try {
+        const currentUrl = new URL(window.location.href);
+        currentUrl.searchParams.set(DATA_FETCH_QUERY, encodeURIComponent(id));
+        if (params) {
+          currentUrl.searchParams.set(
+            "params",
+            encodeURIComponent(JSON.stringify(params))
+          );
+        }
+        if (remoteInfo) {
+          currentUrl.searchParams.set(
+            "remoteInfo",
+            encodeURIComponent(JSON.stringify(remoteInfo))
+          );
+        }
+        const fetchServerQuery = globalThis.FEDERATION_SERVER_QUERY;
+        if (fetchServerQuery && typeof fetchServerQuery === "object") {
+          Object.keys(fetchServerQuery).forEach((key) => {
+            currentUrl.searchParams.set(
+              key,
+              JSON.stringify(fetchServerQuery[key])
+            );
+          });
+        }
+        const fetchUrl = currentUrl.toString();
+        const data = await fetch(fetchUrl).then((res2) => res2.json());
+        mfDataFetch[2] = MF_DATA_FETCH_STATUS.LOADED;
+        res && res(data);
+      } catch (e) {
+        mfDataFetch[2] = MF_DATA_FETCH_STATUS.ERROR;
+        rej && rej(e);
+      }
+    }
+    return promise;
+  }
+}
+function isCSROnly() {
+  return window._SSR_DATA === void 0;
+}
+function isServerEnv() {
+  return typeof window === "undefined";
+}
+function setSSREnv({
+  fetchServerQuery
+}) {
+  globalThis.FEDERATION_SSR = true;
+  globalThis.FEDERATION_SERVER_QUERY = fetchServerQuery;
+}
+function getLoadedRemoteInfos(id, instance) {
+  if (!instance) {
+    return;
+  }
+  const { name, expose } = instance.remoteHandler.idToRemoteMap[id] || {};
+  if (!name) {
+    return;
+  }
+  const module = instance.moduleCache.get(name);
+  if (!module) {
+    return;
+  }
+  const { remoteSnapshot } = instance.snapshotHandler.getGlobalRemoteInfo(
+    module.remoteInfo
+  );
+  return {
+    ...module.remoteInfo,
+    snapshot: remoteSnapshot,
+    expose
+  };
+}
+export {
+  setDataFetchItemLoadedStatus as A,
+  warn as B,
+  CacheSize as C,
+  DATA_FETCH_QUERY as D,
+  ERROR_TYPE as E,
+  FS_HREF as F,
+  DOWNGRADE_KEY as G,
+  callAllDowngrade as H,
+  callDowngrade as I,
+  getDowngradeTag as J,
+  composeKeyWithSeparator as K,
+  LOAD_REMOTE_ERROR_PREFIX as L,
+  MF_DATA_FETCH_STATUS as M,
+  safeToString as N,
+  getDataFetchCache as O,
+  CacheTime as a,
+  clearStore as b,
+  cache as c,
+  configureCache as d,
+  getDataFetchMap as e,
+  flushDataFetch as f,
+  generateKey as g,
+  fetchData as h,
+  initDataFetchMap as i,
+  loadDataFetchModule as j,
+  isDataLoaderExpose as k,
+  logger as l,
+  getDataFetchInfo as m,
+  getDataFetchMapKey as n,
+  getDataFetchItem as o,
+  DATA_FETCH_CLIENT_SUFFIX as p,
+  MF_DATA_FETCH_TYPE as q,
+  revalidateTag as r,
+  setSSREnv as s,
+  isCSROnly as t,
+  isServerEnv as u,
+  getDataFetchIdWithErrorMsgs as v,
+  DATA_FETCH_ERROR_PREFIX as w,
+  wrapDataFetchId as x,
+  DATA_FETCH_FUNCTION as y,
+  getLoadedRemoteInfos as z
+};

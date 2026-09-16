@@ -1,0 +1,9 @@
+import type { getInstance } from '@module-federation/runtime';
+import { DataFetchParams } from '../types';
+export type PrefetchOptions = {
+    id: string;
+    instance: ReturnType<typeof getInstance>;
+    dataFetchParams?: DataFetchParams;
+    preloadComponentResource?: boolean;
+};
+export declare function prefetch(options: PrefetchOptions): Promise<void>;

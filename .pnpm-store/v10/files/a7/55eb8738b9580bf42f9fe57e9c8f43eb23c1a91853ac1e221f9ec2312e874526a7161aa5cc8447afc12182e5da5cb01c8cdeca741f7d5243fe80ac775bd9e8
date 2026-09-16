@@ -1,0 +1,26 @@
+import { y as DATA_FETCH_FUNCTION } from "./utils-BBP3hEeV.mjs";
+import { C, a, c, b, d, g, r } from "./utils-BBP3hEeV.mjs";
+import { d as dataFetchFunction } from "./prefetch-xvZIEaJL.mjs";
+import { i, p } from "./prefetch-xvZIEaJL.mjs";
+async function callDataFetch() {
+  const dataFetch = globalThis[DATA_FETCH_FUNCTION];
+  if (dataFetch) {
+    await Promise.all(
+      dataFetch.map(async (options) => {
+        await dataFetchFunction(options);
+      })
+    );
+  }
+}
+export {
+  C as CacheSize,
+  a as CacheTime,
+  c as cache,
+  callDataFetch,
+  b as clearStore,
+  d as configureCache,
+  g as generateKey,
+  i as injectDataFetch,
+  p as prefetch,
+  r as revalidateTag
+};

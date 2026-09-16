@@ -1,0 +1,24 @@
+import "./logger-DwWkXsWl.mjs";
+import { H, I, h, f, O, v, m, o, e, n, J, z, i, t, k, u, j, A, s, x } from "./utils-BBP3hEeV.mjs";
+export {
+  H as callAllDowngrade,
+  I as callDowngrade,
+  h as fetchData,
+  f as flushDataFetch,
+  O as getDataFetchCache,
+  v as getDataFetchIdWithErrorMsgs,
+  m as getDataFetchInfo,
+  o as getDataFetchItem,
+  e as getDataFetchMap,
+  n as getDataFetchMapKey,
+  J as getDowngradeTag,
+  z as getLoadedRemoteInfos,
+  i as initDataFetchMap,
+  t as isCSROnly,
+  k as isDataLoaderExpose,
+  u as isServerEnv,
+  j as loadDataFetchModule,
+  A as setDataFetchItemLoadedStatus,
+  s as setSSREnv,
+  x as wrapDataFetchId
+};

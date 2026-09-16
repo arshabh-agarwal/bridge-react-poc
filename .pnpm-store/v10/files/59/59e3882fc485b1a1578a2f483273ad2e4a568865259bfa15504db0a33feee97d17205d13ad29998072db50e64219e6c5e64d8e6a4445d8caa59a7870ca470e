@@ -1,0 +1,15 @@
+import { createRoot } from "react-dom/client";
+import { c as createBaseBridgeComponent } from "./bridge-base-CHnL6Q9P.mjs";
+function createReact19Root(container, options) {
+  return createRoot(container, options);
+}
+function createBridgeComponent(bridgeInfo) {
+  const fullBridgeInfo = {
+    createRoot: createReact19Root,
+    ...bridgeInfo
+  };
+  return createBaseBridgeComponent(fullBridgeInfo);
+}
+export {
+  createBridgeComponent
+};

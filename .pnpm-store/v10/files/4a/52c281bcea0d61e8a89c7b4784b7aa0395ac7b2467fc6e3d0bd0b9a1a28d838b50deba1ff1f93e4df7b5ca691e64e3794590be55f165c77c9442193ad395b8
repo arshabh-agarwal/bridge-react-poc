@@ -1,0 +1,34 @@
+import React__default, { useContext } from "react";
+import * as ReactRouterDom$1 from "react-router-dom/index.js";
+import { R as RouterContext, L as LoggerInstance } from "./index-Bs2NxD2z.mjs";
+export * from "react-router-dom/index.js";
+function WraperRouter(props) {
+  const { basename, ...propsRes } = props;
+  const routerContextProps = useContext(RouterContext) || {};
+  const MemoryRouter = ReactRouterDom$1.MemoryRouter;
+  const BrowserRouter = ReactRouterDom$1.BrowserRouter;
+  LoggerInstance.debug(`WraperRouter info >>>`, {
+    ...routerContextProps,
+    routerContextProps,
+    WraperRouterProps: props
+  });
+  if (routerContextProps == null ? void 0 : routerContextProps.memoryRoute) {
+    return /* @__PURE__ */ React__default.createElement(
+      MemoryRouter,
+      {
+        ...props,
+        initialEntries: [routerContextProps == null ? void 0 : routerContextProps.memoryRoute.entryPath]
+      }
+    );
+  }
+  return /* @__PURE__ */ React__default.createElement(
+    BrowserRouter,
+    {
+      ...propsRes,
+      basename: (routerContextProps == null ? void 0 : routerContextProps.basename) || basename
+    }
+  );
+}
+export {
+  WraperRouter as BrowserRouter
+};

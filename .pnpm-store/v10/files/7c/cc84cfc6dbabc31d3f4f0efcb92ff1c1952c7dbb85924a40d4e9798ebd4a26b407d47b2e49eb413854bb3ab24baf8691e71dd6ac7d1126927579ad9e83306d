@@ -1,0 +1,4 @@
+import React from 'react';
+export declare function HydratedStylesheetAssets({ hrefs }: {
+    hrefs: string[];
+}): React.JSX.Element;

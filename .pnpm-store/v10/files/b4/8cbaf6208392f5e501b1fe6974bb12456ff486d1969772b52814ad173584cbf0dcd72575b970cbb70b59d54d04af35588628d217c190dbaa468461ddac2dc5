@@ -1,0 +1,7 @@
+import type { ModuleFederationRuntimePlugin, ModuleFederation } from '@module-federation/runtime';
+export type FederationRuntimeType = {
+    instance: ModuleFederation | null;
+};
+export declare const federationRuntime: FederationRuntimeType;
+declare function BridgeReactPlugin(): ModuleFederationRuntimePlugin;
+export default BridgeReactPlugin;

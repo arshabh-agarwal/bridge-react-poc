@@ -1,0 +1,205 @@
+"use strict";
+const bridgeBase = require("./bridge-base-DSYKAGGD.js");
+const ReactDOM = require("react-dom");
+const index = require("./index-DbjGCKOr.js");
+const React = require("react");
+const plugin = require("./plugin.cjs.js");
+function createReact16Or17Root(container) {
+  return {
+    render(children) {
+      const reactVersion = ReactDOM.version || "";
+      const isReact18 = reactVersion.startsWith("18");
+      const isReact19 = reactVersion.startsWith("19");
+      if (isReact19) {
+        throw new Error(
+          `React 19 detected in legacy mode. This is not supported. Please use the version-specific import: import { createBridgeComponent } from '@module-federation/bridge-react/v19'`
+        );
+      }
+      if (isReact18) {
+        index.LoggerInstance.warn(
+          `[Bridge-React] React 18 detected in legacy mode. For better compatibility, please use the version-specific import: import { createBridgeComponent } from '@module-federation/bridge-react/v18'`
+        );
+      }
+      ReactDOM.render(children, container);
+    },
+    unmount() {
+      ReactDOM.unmountComponentAtNode(container);
+    }
+  };
+}
+function createBridgeComponent(bridgeInfo) {
+  const fullBridgeInfo = {
+    createRoot: createReact16Or17Root,
+    ...bridgeInfo
+  };
+  return bridgeBase.createBaseBridgeComponent(fullBridgeInfo);
+}
+const RemoteAppWrapper = React.forwardRef(function(props, ref) {
+  const {
+    moduleName,
+    memoryRoute,
+    basename,
+    providerInfo,
+    className,
+    style,
+    fallback,
+    loading,
+    ...resProps
+  } = props;
+  const instance = plugin.federationRuntime.instance;
+  const rootRef = ref && "current" in ref ? ref : React.useRef(null);
+  const renderDom = React.useRef(null);
+  const providerInfoRef = React.useRef(null);
+  const [initialized, setInitialized] = React.useState(false);
+  index.LoggerInstance.debug(`RemoteAppWrapper instance from props >>>`, instance);
+  React.useEffect(() => {
+    if (initialized) return;
+    const providerReturn = providerInfo();
+    providerInfoRef.current = providerReturn;
+    setInitialized(true);
+    return () => {
+      var _a, _b, _c, _d, _e, _f, _g;
+      if ((_a = providerInfoRef.current) == null ? void 0 : _a.destroy) {
+        index.LoggerInstance.debug(
+          `createRemoteAppComponent LazyComponent destroy >>>`,
+          { moduleName, basename, dom: renderDom.current }
+        );
+        const destroyInfo = {
+          moduleName,
+          dom: renderDom.current,
+          basename,
+          memoryRoute,
+          fallback,
+          ...resProps
+        };
+        const operationContext = {
+          side: "consumer",
+          framework: "react",
+          operation: "destroy",
+          reason: "unmount"
+        };
+        (_d = (_c = (_b = instance == null ? void 0 : instance.bridgeHook) == null ? void 0 : _b.lifecycle) == null ? void 0 : _c.beforeBridgeDestroy) == null ? void 0 : _d.emit(
+          destroyInfo,
+          operationContext
+        );
+        providerInfoRef.current.destroy({
+          moduleName,
+          dom: renderDom.current
+        });
+        (_g = (_f = (_e = instance == null ? void 0 : instance.bridgeHook) == null ? void 0 : _e.lifecycle) == null ? void 0 : _f.afterBridgeDestroy) == null ? void 0 : _g.emit(destroyInfo, {
+          context: operationContext
+        });
+      }
+    };
+  }, [moduleName]);
+  React.useEffect(() => {
+    var _a, _b, _c, _d, _e, _f;
+    if (!initialized || !providerInfoRef.current) return;
+    let renderProps = {
+      moduleName,
+      dom: rootRef.current,
+      basename,
+      memoryRoute,
+      fallback,
+      ...resProps
+    };
+    renderDom.current = rootRef.current;
+    const operationContext = {
+      side: "consumer",
+      framework: "react",
+      operation: "render"
+    };
+    const beforeBridgeRenderRes = ((_c = (_b = (_a = instance == null ? void 0 : instance.bridgeHook) == null ? void 0 : _a.lifecycle) == null ? void 0 : _b.beforeBridgeRender) == null ? void 0 : _c.emit(
+      renderProps,
+      operationContext
+    )) || {};
+    renderProps = { ...renderProps, ...beforeBridgeRenderRes.extraProps };
+    providerInfoRef.current.render(renderProps);
+    (_f = (_e = (_d = instance == null ? void 0 : instance.bridgeHook) == null ? void 0 : _d.lifecycle) == null ? void 0 : _e.afterBridgeRender) == null ? void 0 : _f.emit(renderProps, {
+      context: operationContext
+    });
+  }, [initialized, ...Object.values(props)]);
+  const rootComponentClassName = `${index.getRootDomDefaultClassName(moduleName)} ${className || ""}`;
+  return /* @__PURE__ */ React.createElement("div", { className: rootComponentClassName, style, ref: rootRef }, loading);
+});
+function createLazyRemoteComponentFactory(RemoteApp) {
+  return function createLazyRemoteComponent(info) {
+    const exportName = (info == null ? void 0 : info.export) || "default";
+    return React.lazy(async () => {
+      index.LoggerInstance.debug(
+        `createRemoteAppComponent LazyComponent create >>>`,
+        {
+          lazyComponent: info.loader,
+          exportName
+        }
+      );
+      try {
+        const m = await info.loader();
+        const moduleName = m && m[Symbol.for("mf_module_id")];
+        index.LoggerInstance.debug(
+          `createRemoteAppComponent LazyComponent loadRemote info >>>`,
+          { name: moduleName, module: m, exportName }
+        );
+        const exportFn = m[exportName];
+        if (exportName in m && typeof exportFn === "function") {
+          const RemoteAppComponent = React.forwardRef((props, ref) => {
+            return /* @__PURE__ */ React.createElement(
+              RemoteApp,
+              {
+                moduleName,
+                providerInfo: exportFn,
+                exportName: info.export || "default",
+                fallback: info.fallback,
+                loading: info.loading,
+                ref,
+                ...props
+              }
+            );
+          });
+          return {
+            default: RemoteAppComponent
+          };
+        } else {
+          index.LoggerInstance.debug(
+            `createRemoteAppComponent LazyComponent module not found >>>`,
+            { name: moduleName, module: m, exportName }
+          );
+          throw Error(
+            `Make sure that ${moduleName} has the correct export when export is ${String(
+              exportName
+            )}`
+          );
+        }
+      } catch (error) {
+        throw error;
+      }
+    });
+  };
+}
+function createRemoteAppComponentFactory(RemoteApp) {
+  const createLazyRemoteComponent = createLazyRemoteComponentFactory(RemoteApp);
+  return function createRemoteAppComponent(info) {
+    const LazyComponent = createLazyRemoteComponent(info);
+    return React.forwardRef((props, ref) => {
+      return /* @__PURE__ */ React.createElement(
+        bridgeBase.ErrorBoundary,
+        {
+          FallbackComponent: info.fallback
+        },
+        /* @__PURE__ */ React.createElement(React.Suspense, { fallback: info.loading }, /* @__PURE__ */ React.createElement(LazyComponent, { ...props, ref }))
+      );
+    });
+  };
+}
+function createDeprecatedRemoteComponentFactory(createFn) {
+  return function createRemoteComponent(info) {
+    index.LoggerInstance.warn(
+      `createRemoteComponent is deprecated, please use createRemoteAppComponent instead!`
+    );
+    return createFn(info);
+  };
+}
+exports.RemoteAppWrapper = RemoteAppWrapper;
+exports.createBridgeComponent = createBridgeComponent;
+exports.createDeprecatedRemoteComponentFactory = createDeprecatedRemoteComponentFactory;
+exports.createRemoteAppComponentFactory = createRemoteAppComponentFactory;

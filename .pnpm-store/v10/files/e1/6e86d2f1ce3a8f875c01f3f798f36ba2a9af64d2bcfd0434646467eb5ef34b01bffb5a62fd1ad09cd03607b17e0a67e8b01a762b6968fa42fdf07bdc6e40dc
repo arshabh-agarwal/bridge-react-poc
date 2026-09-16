@@ -1,0 +1,24 @@
+"use strict";
+Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
+const lazyUtils = require("./utils-5dGErM3C.js");
+const prefetch = require("./prefetch-CMvAw8F3.js");
+async function callDataFetch() {
+  const dataFetch = globalThis[lazyUtils.DATA_FETCH_FUNCTION];
+  if (dataFetch) {
+    await Promise.all(
+      dataFetch.map(async (options) => {
+        await prefetch.dataFetchFunction(options);
+      })
+    );
+  }
+}
+exports.CacheSize = lazyUtils.CacheSize;
+exports.CacheTime = lazyUtils.CacheTime;
+exports.cache = lazyUtils.cache;
+exports.clearStore = lazyUtils.clearStore;
+exports.configureCache = lazyUtils.configureCache;
+exports.generateKey = lazyUtils.generateKey;
+exports.revalidateTag = lazyUtils.revalidateTag;
+exports.injectDataFetch = prefetch.injectDataFetch;
+exports.prefetch = prefetch.prefetch;
+exports.callDataFetch = callDataFetch;

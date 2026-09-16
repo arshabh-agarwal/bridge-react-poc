@@ -1,0 +1,9 @@
+import { type LazyRemoteComponentInfo } from '../createHelpers';
+export type { LazyRemoteComponentInfo };
+declare const createLazyRemoteComponent: <T = Record<string, unknown>, E extends keyof T = keyof T>(info: LazyRemoteComponentInfo<T, E>) => import("node_modules/@types/react").LazyExoticComponent<import("node_modules/@types/react").ForwardRefExoticComponent<Omit<import("../..").RemoteComponentProps<Record<string, unknown>>, "ref"> & import("node_modules/@types/react").RefAttributes<HTMLDivElement>>>;
+export declare const createRemoteAppComponent: <T = Record<string, unknown>, E extends keyof T = keyof T>(info: LazyRemoteComponentInfo<T, E>) => import("node_modules/@types/react").ForwardRefExoticComponent<Omit<import("../..").RemoteComponentProps<Record<string, unknown>>, "ref"> & import("node_modules/@types/react").RefAttributes<HTMLDivElement>>;
+/**
+ * @deprecated createRemoteComponent is deprecated, please use createRemoteAppComponent instead!
+ */
+export declare const createRemoteComponent: <T = Record<string, unknown>, E extends keyof T = keyof T>(info: LazyRemoteComponentInfo<T, E>) => any;
+export { createLazyRemoteComponent };

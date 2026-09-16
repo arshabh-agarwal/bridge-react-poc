@@ -1,0 +1,4 @@
+import { dataFetchFunctionOptions } from '../types';
+declare const dataFetchFunction: (options: dataFetchFunctionOptions) => Promise<unknown>;
+export declare function injectDataFetch(): void;
+export { dataFetchFunction };

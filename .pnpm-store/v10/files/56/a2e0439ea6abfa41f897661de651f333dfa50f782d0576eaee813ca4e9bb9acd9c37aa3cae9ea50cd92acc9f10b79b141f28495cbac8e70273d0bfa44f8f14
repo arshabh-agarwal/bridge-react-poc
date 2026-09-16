@@ -1,0 +1,29 @@
+export interface SizeLimitedCacheOptions<K, V> {
+    maxSize: number;
+    sizeCalculation?: (value: V, key: K) => number;
+}
+export interface SizeLimitedCacheSetOptions {
+    size?: number;
+}
+/**
+ * A small, size-aware least-recently-used cache.
+ *
+ * This intentionally implements only the operations used by federation
+ * packages. Reading or checking an entry refreshes its recency.
+ */
+export declare class SizeLimitedCache<K, V> {
+    readonly maxSize: number;
+    private readonly entries;
+    private readonly sizeCalculation?;
+    private currentSize;
+    constructor(options: SizeLimitedCacheOptions<K, V>);
+    get size(): number;
+    get calculatedSize(): number;
+    get(key: K): V | undefined;
+    has(key: K): boolean;
+    set(key: K, value: V, options?: SizeLimitedCacheSetOptions): this;
+    delete(key: K): boolean;
+    clear(): void;
+    private refresh;
+    private evictUntilWithinLimit;
+}

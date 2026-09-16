@@ -1,0 +1,171 @@
+var __defProp = Object.defineProperty;
+var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
+var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
+import * as React from "react";
+import { L as LoggerInstance, R as RouterContext } from "./index-Bs2NxD2z.mjs";
+import { federationRuntime } from "./plugin.es.js";
+const initialState = { didCatch: false, error: null };
+class ErrorBoundary extends React.Component {
+  constructor() {
+    super(...arguments);
+    __publicField(this, "state", initialState);
+    __publicField(this, "resetErrorBoundary", (..._args) => {
+      if (this.state.didCatch) {
+        this.setState(initialState);
+      }
+    });
+  }
+  static getDerivedStateFromError(error) {
+    return { didCatch: true, error };
+  }
+  render() {
+    if (this.state.didCatch) {
+      return /* @__PURE__ */ React.createElement(
+        this.props.FallbackComponent,
+        {
+          error: this.state.error,
+          resetErrorBoundary: this.resetErrorBoundary
+        }
+      );
+    }
+    return this.props.children;
+  }
+}
+function createBaseBridgeComponent({
+  createRoot,
+  defaultRootOptions,
+  ...bridgeInfo
+}) {
+  return () => {
+    const rootMap = /* @__PURE__ */ new Map();
+    const instance = federationRuntime.instance;
+    LoggerInstance.debug(
+      `createBridgeComponent instance from props >>>`,
+      instance
+    );
+    const RawComponent = (info) => {
+      const { appInfo, propsInfo, ...restProps } = info;
+      const { moduleName, memoryRoute, basename = "/" } = appInfo;
+      return /* @__PURE__ */ React.createElement(RouterContext.Provider, { value: { moduleName, basename, memoryRoute } }, /* @__PURE__ */ React.createElement(
+        bridgeInfo.rootComponent,
+        {
+          ...propsInfo,
+          basename,
+          ...restProps
+        }
+      ));
+    };
+    const DefaultFallback = ({ error }) => /* @__PURE__ */ React.createElement("div", { role: "alert" }, /* @__PURE__ */ React.createElement("p", null, "Something went wrong:"), /* @__PURE__ */ React.createElement("pre", { style: { color: "red" } }, error instanceof Error ? error.message : String(error)));
+    const omitHostFallback = (props) => {
+      const nextProps = { ...props };
+      delete nextProps.fallback;
+      return nextProps;
+    };
+    const BridgeWrapper = ({
+      basename,
+      moduleName,
+      memoryRoute,
+      propsInfo
+    }) => /* @__PURE__ */ React.createElement(ErrorBoundary, { FallbackComponent: DefaultFallback }, /* @__PURE__ */ React.createElement(
+      RawComponent,
+      {
+        appInfo: {
+          moduleName,
+          basename,
+          memoryRoute
+        },
+        propsInfo
+      }
+    ));
+    return {
+      async render(info) {
+        var _a, _b, _c, _d, _e, _f;
+        LoggerInstance.debug(`createBridgeComponent render Info`, info);
+        const {
+          moduleName,
+          dom,
+          basename,
+          memoryRoute,
+          rootOptions,
+          ...propsInfo
+        } = info;
+        const operationContext = {
+          side: "producer",
+          framework: "react",
+          operation: rootMap.has(dom) ? "update" : "render",
+          reason: "direct"
+        };
+        const mergedRootOptions = {
+          ...defaultRootOptions,
+          ...rootOptions
+        };
+        const beforeBridgeRenderRes = ((_c = (_b = (_a = instance == null ? void 0 : instance.bridgeHook) == null ? void 0 : _a.lifecycle) == null ? void 0 : _b.beforeBridgeRender) == null ? void 0 : _c.emit(
+          info,
+          operationContext
+        )) || {};
+        const rootComponentWithErrorBoundary = /* @__PURE__ */ React.createElement(
+          BridgeWrapper,
+          {
+            basename,
+            moduleName,
+            memoryRoute,
+            propsInfo: {
+              ...omitHostFallback(propsInfo),
+              basename,
+              ...beforeBridgeRenderRes == null ? void 0 : beforeBridgeRenderRes.extraProps
+            }
+          }
+        );
+        if (bridgeInfo.render) {
+          const root = await Promise.resolve(
+            bridgeInfo.render(rootComponentWithErrorBoundary, dom)
+          );
+          rootMap.set(dom, root);
+        } else {
+          let root = rootMap.get(dom);
+          if (!root && createRoot) {
+            root = createRoot(dom, mergedRootOptions);
+            rootMap.set(dom, root);
+          }
+          if (root && "render" in root) {
+            root.render(rootComponentWithErrorBoundary);
+          }
+        }
+        ((_f = (_e = (_d = instance == null ? void 0 : instance.bridgeHook) == null ? void 0 : _d.lifecycle) == null ? void 0 : _e.afterBridgeRender) == null ? void 0 : _f.emit(info, {
+          context: operationContext
+        })) || {};
+      },
+      destroy(info) {
+        var _a, _b, _c, _d, _e, _f;
+        const { dom } = info;
+        LoggerInstance.debug(`createBridgeComponent destroy Info`, info);
+        const root = rootMap.get(dom);
+        const operationContext = {
+          side: "producer",
+          framework: "react",
+          operation: "destroy",
+          reason: "direct"
+        };
+        (_c = (_b = (_a = instance == null ? void 0 : instance.bridgeHook) == null ? void 0 : _a.lifecycle) == null ? void 0 : _b.beforeBridgeDestroy) == null ? void 0 : _c.emit(
+          info,
+          operationContext
+        );
+        if (root) {
+          if ("unmount" in root) {
+            root.unmount();
+          } else {
+            LoggerInstance.warn("Root does not have unmount method");
+          }
+          rootMap.delete(dom);
+        }
+        (_f = (_e = (_d = instance == null ? void 0 : instance.bridgeHook) == null ? void 0 : _d.lifecycle) == null ? void 0 : _e.afterBridgeDestroy) == null ? void 0 : _f.emit(info, {
+          context: operationContext
+        });
+      }
+    };
+  };
+}
+export {
+  ErrorBoundary as E,
+  createBaseBridgeComponent as c
+};

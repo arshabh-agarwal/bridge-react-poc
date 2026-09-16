@@ -1,0 +1,46 @@
+import React__default from "react";
+import { c as createLogger } from "./logger-DwWkXsWl.mjs";
+const RouterContext = React__default.createContext(null);
+const LoggerInstance = createLogger(
+  "[ Module Federation Bridge React ]"
+);
+function pathJoin(...args) {
+  const res = args.reduce((res2, path) => {
+    let nPath = path;
+    if (!nPath || typeof nPath !== "string") {
+      return res2;
+    }
+    if (nPath[0] !== "/") {
+      nPath = `/${nPath}`;
+    }
+    const lastIndex = nPath.length - 1;
+    if (nPath[lastIndex] === "/") {
+      nPath = nPath.substring(0, lastIndex);
+    }
+    return res2 + nPath;
+  }, "");
+  return res || "/";
+}
+const getModuleName = (id) => {
+  if (!id) {
+    return id;
+  }
+  const idArray = id.split("/");
+  if (idArray.length < 2) {
+    return id;
+  }
+  return idArray[0] + "/" + idArray[1];
+};
+const getRootDomDefaultClassName = (moduleName) => {
+  if (!moduleName) {
+    return "";
+  }
+  const name = getModuleName(moduleName).replace(/\@/, "").replace(/\//, "-");
+  return `bridge-root-component-${name}`;
+};
+export {
+  LoggerInstance as L,
+  RouterContext as R,
+  getRootDomDefaultClassName as g,
+  pathJoin as p
+};

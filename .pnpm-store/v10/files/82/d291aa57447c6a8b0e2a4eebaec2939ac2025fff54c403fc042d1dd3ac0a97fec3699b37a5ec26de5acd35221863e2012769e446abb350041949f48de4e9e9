@@ -1,0 +1,5 @@
+import type { ProviderFnParams, DestroyParams, RenderParams } from '../../types';
+export declare function createBaseBridgeComponent<T>({ createRoot, defaultRootOptions, ...bridgeInfo }: ProviderFnParams<T>): () => {
+    render(info: RenderParams): Promise<void>;
+    destroy(info: DestroyParams): void;
+};

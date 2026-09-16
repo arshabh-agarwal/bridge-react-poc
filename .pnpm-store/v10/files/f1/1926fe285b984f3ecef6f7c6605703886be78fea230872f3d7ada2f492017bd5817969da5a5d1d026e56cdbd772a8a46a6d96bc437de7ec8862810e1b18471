@@ -1,0 +1,194 @@
+{
+  "name": "@module-federation/bridge-react",
+  "version": "2.9.0",
+  "sideEffects": false,
+  "publishConfig": {
+    "access": "public"
+  },
+  "author": "zhouxiao <codingzx@gmail.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/module-federation/core.git",
+    "directory": "packages/bridge/bridge-react"
+  },
+  "files": [
+    "dist/",
+    "README.md"
+  ],
+  "main": "./dist/index.cjs.js",
+  "module": "./dist/index.es.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.es.js",
+      "require": "./dist/index.cjs.js"
+    },
+    "./base": {
+      "types": "./dist/base.d.ts",
+      "import": "./dist/base.es.js",
+      "require": "./dist/base.cjs.js"
+    },
+    "./v18": {
+      "types": "./dist/v18.d.ts",
+      "import": "./dist/v18.es.js",
+      "require": "./dist/v18.cjs.js"
+    },
+    "./v19": {
+      "types": "./dist/v19.d.ts",
+      "import": "./dist/v19.es.js",
+      "require": "./dist/v19.cjs.js"
+    },
+    "./router": {
+      "types": "./dist/router.d.ts",
+      "import": "./dist/router.es.js",
+      "require": "./dist/router.cjs.js"
+    },
+    "./plugin": {
+      "types": "./dist/plugin.d.ts",
+      "import": "./dist/plugin.es.js",
+      "require": "./dist/plugin.cjs.js"
+    },
+    "./router-v5": {
+      "types": "./dist/router-v5.d.ts",
+      "import": "./dist/router-v5.es.js",
+      "require": "./dist/router-v5.cjs.js"
+    },
+    "./router-v6": {
+      "types": "./dist/router-v6.d.ts",
+      "import": "./dist/router-v6.es.js",
+      "require": "./dist/router-v6.cjs.js"
+    },
+    "./router-v7": {
+      "types": "./dist/router-v7.d.ts",
+      "import": "./dist/router-v7.es.js",
+      "require": "./dist/router-v7.cjs.js"
+    },
+    "./lazy-utils": {
+      "types": "./dist/lazy-utils.d.ts",
+      "import": "./dist/lazy-utils.es.js",
+      "require": "./dist/lazy-utils.cjs.js"
+    },
+    "./data-fetch-utils": {
+      "types": "./dist/data-fetch-utils.d.ts",
+      "import": "./dist/data-fetch-utils.es.js",
+      "require": "./dist/data-fetch-utils.cjs.js"
+    },
+    "./data-fetch": {
+      "types": "./dist/data-fetch.d.ts",
+      "import": "./dist/data-fetch.es.js",
+      "require": "./dist/data-fetch.cjs.js"
+    },
+    "./data-fetch-server-middleware": {
+      "types": "./dist/data-fetch-server-middleware.d.ts",
+      "import": "./dist/data-fetch-server-middleware.es.js",
+      "require": "./dist/data-fetch-server-middleware.cjs.js"
+    },
+    "./lazy-load-component-plugin": {
+      "types": "./dist/lazy-load-component-plugin.d.ts",
+      "import": "./dist/lazy-load-component-plugin.es.js",
+      "require": "./dist/lazy-load-component-plugin.cjs.js"
+    },
+    "./size-limited-cache": {
+      "types": "./dist/size-limited-cache.d.ts",
+      "import": "./dist/size-limited-cache.es.js",
+      "require": "./dist/size-limited-cache.cjs.js"
+    },
+    "./*": "./*"
+  },
+  "typesVersions": {
+    "*": {
+      ".": [
+        "./dist/index.d.ts"
+      ],
+      "base": [
+        "./dist/base.d.ts"
+      ],
+      "v18": [
+        "./dist/v18.d.ts"
+      ],
+      "v19": [
+        "./dist/v19.d.ts"
+      ],
+      "router": [
+        "./dist/router.d.ts"
+      ],
+      "plugin": [
+        "./dist/plugin.d.ts"
+      ],
+      "router-v5": [
+        "./dist/router-v5.d.ts"
+      ],
+      "router-v6": [
+        "./dist/router-v6.d.ts"
+      ],
+      "router-v7": [
+        "./dist/router-v7.d.ts"
+      ],
+      "lazy-load-component-plugin": [
+        "./dist/lazy-load-component-plugin.d.ts"
+      ],
+      "lazy-utils": [
+        "./dist/lazy-utils.d.ts"
+      ],
+      "data-fetch-utils": [
+        "./dist/data-fetch-utils.d.ts"
+      ],
+      "data-fetch": [
+        "./dist/data-fetch.d.ts"
+      ],
+      "data-fetch-server-middleware": [
+        "./dist/data-fetch-server-middleware.d.ts"
+      ],
+      "size-limited-cache": [
+        "./dist/size-limited-cache.d.ts"
+      ]
+    }
+  },
+  "dependencies": {
+    "@module-federation/sdk": "2.9.0"
+  },
+  "peerDependencies": {
+    "react": ">=16.9.0",
+    "react-dom": ">=16.9.0",
+    "react-router-dom": "^4 || ^5 || ^6 || ^7",
+    "react-router": "^6 || ^7"
+  },
+  "peerDependenciesMeta": {
+    "react-router-dom": {
+      "optional": true
+    },
+    "react-router": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@rsbuild/plugin-react": "2.1.0",
+    "@testing-library/react": "15.0.7",
+    "@testing-library/jest-dom": "6.6.3",
+    "@types/react": "18.2.79",
+    "@types/react-dom": "18.3.0",
+    "@vitejs/plugin-react": "^4.3.3",
+    "@vitejs/plugin-vue": "^5.0.4",
+    "@vitejs/plugin-vue-jsx": "^4.0.0",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "react-router-dom": "6.30.3",
+    "react-router": "7.18.2",
+    "typescript": "7.0.2",
+    "vite": "^5.4.21",
+    "hono": "4.13.1",
+    "@module-federation/bridge-shared": "2.9.0",
+    "@module-federation/runtime": "2.9.0",
+    "@module-federation/runtime-core": "2.9.0"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build && tsc -p tsconfig.json && node scripts/write-dts-entrypoints.mjs",
+    "preview": "vite preview",
+    "test": "pnpm run test:jest && pnpm run test:rstest",
+    "test:jest": "pnpm exec jest --config jest.config.js --passWithNoTests",
+    "test:rstest": "pnpm exec rstest --passWithNoTests"
+  }
+}

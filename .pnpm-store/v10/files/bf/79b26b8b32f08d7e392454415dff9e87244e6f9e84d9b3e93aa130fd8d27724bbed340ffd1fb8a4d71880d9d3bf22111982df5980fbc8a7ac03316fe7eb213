@@ -1,0 +1,7 @@
+/**
+ * Shared RemoteAppWrapper component used by both base and router versions
+ * This component handles the lifecycle of remote Module Federation apps
+ */
+import React from 'react';
+import { RemoteComponentProps, RemoteAppParams } from '../types';
+export declare const RemoteAppWrapper: React.ForwardRefExoticComponent<Omit<RemoteAppParams & RemoteComponentProps<Record<string, unknown>>, "ref"> & React.RefAttributes<unknown>>;

@@ -1,0 +1,146 @@
+"use strict";
+Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
+const createHelpers = require("./createHelpers-D6thyyLv.js");
+const lazyLoadComponentPlugin = require("./lazy-load-component-plugin-CRqjWQ5N.js");
+const lazyUtils = require("./utils-5dGErM3C.js");
+const dataFetchUtils = require("./data-fetch-utils.cjs.js");
+const React = require("react");
+const ReactRouterDOM = require("react-router-dom");
+const index = require("./index-DbjGCKOr.js");
+const plugin = require("./plugin.cjs.js");
+const prefetch = require("./prefetch-CMvAw8F3.js");
+function _interopNamespaceDefault(e2) {
+  const n = Object.create(null, { [Symbol.toStringTag]: { value: "Module" } });
+  if (e2) {
+    for (const k in e2) {
+      if (k !== "default") {
+        const d = Object.getOwnPropertyDescriptor(e2, k);
+        Object.defineProperty(n, k, d.get ? d : {
+          enumerable: true,
+          get: () => e2[k]
+        });
+      }
+    }
+  }
+  n.default = e2;
+  return Object.freeze(n);
+}
+const ReactRouterDOM__namespace = /* @__PURE__ */ _interopNamespaceDefault(ReactRouterDOM);
+function e() {
+  const t = new PopStateEvent("popstate", { state: window.history.state });
+  window.dispatchEvent(t);
+}
+function withRouterData(WrappedComponent) {
+  const Component = React.forwardRef(function(props, ref) {
+    var _a;
+    if (props == null ? void 0 : props.basename) {
+      return /* @__PURE__ */ React.createElement(WrappedComponent, { ...props, basename: props.basename, ref });
+    }
+    let enableDispathPopstate = false;
+    let routerContextVal;
+    try {
+      ReactRouterDOM__namespace.useLocation();
+      enableDispathPopstate = true;
+    } catch {
+      enableDispathPopstate = false;
+    }
+    let basename = "/";
+    if (!props.basename && enableDispathPopstate) {
+      const ReactRouterDOMAny = ReactRouterDOM__namespace;
+      const useRouteMatch = ReactRouterDOMAny["useRouteMatch"];
+      const useHistory = ReactRouterDOMAny["useHistory"];
+      const useHref = ReactRouterDOMAny["useHref"];
+      const UNSAFE_RouteContext = ReactRouterDOMAny["UNSAFE_RouteContext"];
+      if (UNSAFE_RouteContext) {
+        if (useHref) {
+          basename = useHref == null ? void 0 : useHref("/");
+        }
+        routerContextVal = React.useContext(UNSAFE_RouteContext);
+        if (routerContextVal && routerContextVal.matches && routerContextVal.matches.length > 0) {
+          const matchIndex = routerContextVal.matches.length - 1;
+          const pathnameBase = routerContextVal.matches[matchIndex].pathnameBase;
+          basename = index.pathJoin(basename, pathnameBase || "/");
+        }
+      } else {
+        const match = useRouteMatch == null ? void 0 : useRouteMatch();
+        if (useHistory) {
+          const history = useHistory == null ? void 0 : useHistory();
+          basename = (_a = history == null ? void 0 : history.createHref) == null ? void 0 : _a.call(history, { pathname: "/" });
+        }
+        if (match) {
+          basename = index.pathJoin(basename, (match == null ? void 0 : match.path) || "/");
+        }
+      }
+    }
+    index.LoggerInstance.debug(`createRemoteAppComponent withRouterData >>>`, {
+      ...props,
+      basename,
+      routerContextVal,
+      enableDispathPopstate
+    });
+    if (enableDispathPopstate) {
+      const location = ReactRouterDOM__namespace.useLocation();
+      const [pathname, setPathname] = React.useState(location.pathname);
+      React.useEffect(() => {
+        var _a2;
+        if (pathname !== "" && pathname !== location.pathname) {
+          index.LoggerInstance.debug(
+            `createRemoteAppComponent dispatchPopstateEnv >>>`,
+            {
+              name: props.name,
+              pathname: location.pathname
+            }
+          );
+          const route = {
+            action: "host-to-remote",
+            mechanism: "popstate",
+            from: pathname,
+            to: location.pathname,
+            basename
+          };
+          const operationContext = {
+            side: "consumer",
+            framework: "react",
+            operation: "route-sync",
+            moduleName: props.moduleName,
+            route
+          };
+          e();
+          (_a2 = plugin.federationRuntime.instance) == null ? void 0 : _a2.bridgeHook.lifecycle.afterBridgeRouteSync.emit(
+            {
+              context: operationContext
+            }
+          );
+        }
+        setPathname(location.pathname);
+      }, [location]);
+    }
+    return /* @__PURE__ */ React.createElement(WrappedComponent, { ...props, basename, ref });
+  });
+  return React.forwardRef(function(props, ref) {
+    return /* @__PURE__ */ React.createElement(Component, { ...props, ref });
+  });
+}
+const RemoteApp = withRouterData(createHelpers.RemoteAppWrapper);
+const createRemoteAppComponent = createHelpers.createRemoteAppComponentFactory(RemoteApp);
+const createRemoteComponent = createHelpers.createDeprecatedRemoteComponentFactory(
+  createRemoteAppComponent
+);
+exports.createBridgeComponent = createHelpers.createBridgeComponent;
+exports.autoFetchDataPlugin = lazyLoadComponentPlugin.autoFetchData;
+exports.collectSSRAssets = lazyLoadComponentPlugin.collectSSRAssets;
+exports.createLazyComponent = lazyLoadComponentPlugin.createLazyComponent;
+exports.lazyLoadComponentPlugin = lazyLoadComponentPlugin.lazyLoadComponentPlugin;
+exports.CacheSize = lazyUtils.CacheSize;
+exports.CacheTime = lazyUtils.CacheTime;
+exports.ERROR_TYPE = lazyUtils.ERROR_TYPE;
+exports.cache = lazyUtils.cache;
+exports.clearStore = lazyUtils.clearStore;
+exports.configureCache = lazyUtils.configureCache;
+exports.generateKey = lazyUtils.generateKey;
+exports.revalidateTag = lazyUtils.revalidateTag;
+exports.setSSREnv = lazyUtils.setSSREnv;
+exports.callDataFetch = dataFetchUtils.callDataFetch;
+exports.prefetch = prefetch.prefetch;
+exports.createRemoteAppComponent = createRemoteAppComponent;
+exports.createRemoteComponent = createRemoteComponent;

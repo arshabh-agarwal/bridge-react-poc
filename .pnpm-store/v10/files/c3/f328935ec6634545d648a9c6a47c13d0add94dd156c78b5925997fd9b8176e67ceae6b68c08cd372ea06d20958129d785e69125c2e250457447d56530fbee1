@@ -1,0 +1,4 @@
+export declare const LoggerInstance: import("@module-federation/sdk").Logger;
+export declare function pathJoin(...args: string[]): string;
+export declare const getModuleName: (id: string) => string;
+export declare const getRootDomDefaultClassName: (moduleName: string) => string;

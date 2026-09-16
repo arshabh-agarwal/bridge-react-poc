@@ -1,0 +1,12 @@
+import type { ModuleFederationRuntimePlugin } from '@module-federation/runtime';
+import { createLazyComponent, prefetch, collectSSRAssets } from '../lazy';
+import type { CreateLazyComponentOptions, PrefetchOptions } from '../lazy';
+declare module '@module-federation/runtime-core' {
+    interface ModuleFederation {
+        createLazyComponent<T, E extends keyof T>(options: Omit<CreateLazyComponentOptions<T, E>, 'instance'>): ReturnType<typeof createLazyComponent<T, E>>;
+        prefetch(options: Omit<PrefetchOptions, 'instance'>): ReturnType<typeof prefetch>;
+        collectSSRAssets(options: Omit<Parameters<typeof collectSSRAssets>[0], 'instance'>): ReturnType<typeof collectSSRAssets>;
+    }
+}
+export declare function lazyLoadComponentPlugin(): ModuleFederationRuntimePlugin;
+export default lazyLoadComponentPlugin;

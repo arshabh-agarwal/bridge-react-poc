@@ -1,0 +1,29 @@
+"use strict";
+Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
+const createHelpers = require("./createHelpers-D6thyyLv.js");
+const lazyLoadComponentPlugin = require("./lazy-load-component-plugin-CRqjWQ5N.js");
+const lazyUtils = require("./utils-5dGErM3C.js");
+const dataFetchUtils = require("./data-fetch-utils.cjs.js");
+const prefetch = require("./prefetch-CMvAw8F3.js");
+const createRemoteAppComponent = createHelpers.createRemoteAppComponentFactory(createHelpers.RemoteAppWrapper);
+const createRemoteComponent = createHelpers.createDeprecatedRemoteComponentFactory(
+  createRemoteAppComponent
+);
+exports.createBridgeComponent = createHelpers.createBridgeComponent;
+exports.autoFetchDataPlugin = lazyLoadComponentPlugin.autoFetchData;
+exports.collectSSRAssets = lazyLoadComponentPlugin.collectSSRAssets;
+exports.createLazyComponent = lazyLoadComponentPlugin.createLazyComponent;
+exports.lazyLoadComponentPlugin = lazyLoadComponentPlugin.lazyLoadComponentPlugin;
+exports.CacheSize = lazyUtils.CacheSize;
+exports.CacheTime = lazyUtils.CacheTime;
+exports.ERROR_TYPE = lazyUtils.ERROR_TYPE;
+exports.cache = lazyUtils.cache;
+exports.clearStore = lazyUtils.clearStore;
+exports.configureCache = lazyUtils.configureCache;
+exports.generateKey = lazyUtils.generateKey;
+exports.revalidateTag = lazyUtils.revalidateTag;
+exports.setSSREnv = lazyUtils.setSSREnv;
+exports.callDataFetch = dataFetchUtils.callDataFetch;
+exports.prefetch = prefetch.prefetch;
+exports.createRemoteAppComponent = createRemoteAppComponent;
+exports.createRemoteComponent = createRemoteComponent;

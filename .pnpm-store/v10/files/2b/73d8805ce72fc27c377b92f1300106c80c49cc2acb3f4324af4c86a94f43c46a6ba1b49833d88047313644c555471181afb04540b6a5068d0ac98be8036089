@@ -1,0 +1,9 @@
+import { createLazyComponent } from './createLazyComponent';
+import type { CreateLazyComponentOptions } from './createLazyComponent';
+export declare function wrapNoSSR<T, E extends keyof T>(createLazyComponentFn: typeof createLazyComponent<T, E>): (options: Omit<CreateLazyComponentOptions<T, E>, 'noSSR'>) => (props: T[E] extends (...args: any) => any ? Parameters<T[E]>[0] extends undefined ? {
+    key?: React.Key | null;
+} : Parameters<T[E]>[0] & {
+    key?: React.Key | null;
+} : {
+    key?: React.Key | null;
+}) => import("node_modules/@types/react").JSX.Element;

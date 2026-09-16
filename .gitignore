@@ -1,0 +1,9 @@
+node_modules/
+dist/
+tmp/
+.embroider/
+@mf-types/
+@mf-types.zip
+.DS_Store
+*.log
+.env

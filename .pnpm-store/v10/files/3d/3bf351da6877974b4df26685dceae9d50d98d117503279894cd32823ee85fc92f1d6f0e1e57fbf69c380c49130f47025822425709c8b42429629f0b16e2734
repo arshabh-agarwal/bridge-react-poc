@@ -1,0 +1,17 @@
+import * as React from 'react';
+import type { ErrorFallbackProps } from './types';
+type ErrorBoundaryProps = {
+    children: React.ReactNode;
+    FallbackComponent: React.ComponentType<ErrorFallbackProps>;
+};
+type ErrorBoundaryState = {
+    didCatch: boolean;
+    error: Error | null;
+};
+export declare class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+    state: ErrorBoundaryState;
+    static getDerivedStateFromError(error: Error): ErrorBoundaryState;
+    private resetErrorBoundary;
+    render(): string | number | boolean | React.JSX.Element | Iterable<React.ReactNode> | null | undefined;
+}
+export {};

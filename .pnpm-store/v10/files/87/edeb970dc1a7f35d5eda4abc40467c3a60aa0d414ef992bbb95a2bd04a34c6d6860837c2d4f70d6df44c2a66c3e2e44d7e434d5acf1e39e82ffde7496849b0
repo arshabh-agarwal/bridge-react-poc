@@ -1,0 +1,48 @@
+import type { GlobalModuleInfo } from '@module-federation/sdk';
+import type { DataFetchParams, MF_DATA_FETCH_MAP, NoSSRRemoteInfo, MF_SSR_DOWNGRADE, MF_DATA_FETCH_CACHE } from './types';
+import type { ModuleFederation } from '@module-federation/runtime';
+export declare const getDataFetchInfo: ({ name, alias, id, remoteSnapshot, }: {
+    id: string;
+    name: string;
+    remoteSnapshot: GlobalModuleInfo[string];
+    alias?: string;
+}) => {
+    dataFetchName: string;
+    dataFetchId: string;
+    dataFetchKey: string;
+} | undefined;
+export declare function initDataFetchMap(): void;
+export declare function getDataFetchItem(id: string): import("./types").MF_DATA_FETCH_MAP_VALUE;
+export declare function getDataFetchMap(): MF_DATA_FETCH_MAP;
+export declare function getDataFetchCache(): MF_DATA_FETCH_CACHE;
+export declare const flushDataFetch: () => void;
+export declare function setDataFetchItemLoadedStatus(id: string): void;
+export declare const wrapDataFetchId: (id?: string) => string;
+export declare const getDataFetchIdWithErrorMsgs: (errMsgs: string) => string | undefined;
+export declare function fetchData(id: string, params: DataFetchParams, remoteInfo?: NoSSRRemoteInfo): Promise<unknown | undefined>;
+export declare function getDataFetchMapKey(dataFetchInfo?: ReturnType<typeof getDataFetchInfo>, hostInfo?: {
+    name: string;
+    version?: string;
+}): string | undefined;
+export declare function loadDataFetchModule(instance: ModuleFederation, id: string): Promise<(params: DataFetchParams) => Promise<unknown>>;
+export declare function isDataLoaderExpose(exposeKey: string): boolean;
+export declare function getDowngradeTag(): MF_SSR_DOWNGRADE;
+export declare function callAllDowngrade(): void;
+export declare function callDowngrade(id: string, params?: DataFetchParams, remoteInfo?: NoSSRRemoteInfo): Promise<unknown>;
+export declare function isCSROnly(): boolean;
+export declare function isServerEnv(): boolean;
+export declare function setSSREnv({ fetchServerQuery, }: {
+    fetchServerQuery?: Record<string, unknown>;
+}): void;
+export declare function getLoadedRemoteInfos(id: string, instance: ModuleFederation | null): {
+    alias?: string;
+    name: string;
+    version?: string;
+    buildVersion?: string;
+    entry: string;
+    type: import("@module-federation/sdk").RemoteEntryType;
+    entryGlobalName: string;
+    shareScope: string | string[];
+    snapshot: import("@module-federation/sdk").ManifestProvider | import("@module-federation/sdk").PureEntryProvider | import("@module-federation/sdk").ModuleInfo | undefined;
+    expose: string;
+} | undefined;

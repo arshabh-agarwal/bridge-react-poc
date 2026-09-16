@@ -1,0 +1,6 @@
+import { l, l as l2 } from "./lazy-load-component-plugin-CyRfqVSE.mjs";
+import "./prefetch-xvZIEaJL.mjs";
+export {
+  l as default,
+  l2 as lazyLoadComponentPlugin
+};

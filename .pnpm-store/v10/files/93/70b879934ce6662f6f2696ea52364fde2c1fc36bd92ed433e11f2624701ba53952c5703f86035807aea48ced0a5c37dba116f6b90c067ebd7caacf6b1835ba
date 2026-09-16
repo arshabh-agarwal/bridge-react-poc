@@ -1,0 +1,22 @@
+import { a, c, b, l } from "./lazy-load-component-plugin-CyRfqVSE.mjs";
+import { C, a as a2, E, c as c2, b as b2, d, f, g, r, s } from "./utils-BBP3hEeV.mjs";
+import { callDataFetch } from "./data-fetch-utils.es.js";
+import { p } from "./prefetch-xvZIEaJL.mjs";
+export {
+  C as CacheSize,
+  a2 as CacheTime,
+  E as ERROR_TYPE,
+  a as autoFetchDataPlugin,
+  c2 as cache,
+  callDataFetch,
+  b2 as clearStore,
+  c as collectSSRAssets,
+  d as configureCache,
+  b as createLazyComponent,
+  f as flushDataFetch,
+  g as generateKey,
+  l as lazyLoadComponentPlugin,
+  p as prefetch,
+  r as revalidateTag,
+  s as setSSREnv
+};

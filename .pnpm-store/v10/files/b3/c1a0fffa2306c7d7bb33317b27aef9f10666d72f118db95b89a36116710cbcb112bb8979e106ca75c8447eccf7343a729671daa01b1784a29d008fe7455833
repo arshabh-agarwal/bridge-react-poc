@@ -1,0 +1,82 @@
+"use strict";
+var __defProp = Object.defineProperty;
+var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
+var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
+Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
+class SizeLimitedCache {
+  constructor(options) {
+    __publicField(this, "maxSize");
+    __publicField(this, "entries", /* @__PURE__ */ new Map());
+    __publicField(this, "sizeCalculation");
+    __publicField(this, "currentSize", 0);
+    if (!Number.isInteger(options.maxSize) || options.maxSize <= 0) {
+      throw new TypeError("maxSize must be a positive integer");
+    }
+    this.maxSize = options.maxSize;
+    this.sizeCalculation = options.sizeCalculation;
+  }
+  get size() {
+    return this.entries.size;
+  }
+  get calculatedSize() {
+    return this.currentSize;
+  }
+  get(key) {
+    const entry = this.entries.get(key);
+    if (!entry) {
+      return void 0;
+    }
+    this.refresh(key, entry);
+    return entry.value;
+  }
+  has(key) {
+    const entry = this.entries.get(key);
+    if (!entry) {
+      return false;
+    }
+    this.refresh(key, entry);
+    return true;
+  }
+  set(key, value, options = {}) {
+    var _a;
+    const entrySize = options.size ?? ((_a = this.sizeCalculation) == null ? void 0 : _a.call(this, value, key)) ?? 1;
+    if (!Number.isInteger(entrySize) || entrySize <= 0) {
+      throw new TypeError("entry size must be a positive integer");
+    }
+    this.delete(key);
+    if (entrySize > this.maxSize) {
+      return this;
+    }
+    this.entries.set(key, { value, size: entrySize });
+    this.currentSize += entrySize;
+    this.evictUntilWithinLimit();
+    return this;
+  }
+  delete(key) {
+    const entry = this.entries.get(key);
+    if (!entry) {
+      return false;
+    }
+    this.currentSize -= entry.size;
+    return this.entries.delete(key);
+  }
+  clear() {
+    this.entries.clear();
+    this.currentSize = 0;
+  }
+  refresh(key, entry) {
+    this.entries.delete(key);
+    this.entries.set(key, entry);
+  }
+  evictUntilWithinLimit() {
+    while (this.currentSize > this.maxSize) {
+      const oldest = this.entries.keys().next();
+      if (oldest.done) {
+        this.currentSize = 0;
+        return;
+      }
+      this.delete(oldest.value);
+    }
+  }
+}
+exports.SizeLimitedCache = SizeLimitedCache;

@@ -1,0 +1,648 @@
+import { i as injectDataFetch, p as prefetch } from "./prefetch-xvZIEaJL.mjs";
+import { i as initDataFetchMap, k as isDataLoaderExpose, m as getDataFetchInfo, n as getDataFetchMapKey, l as logger, o as getDataFetchItem, p as DATA_FETCH_CLIENT_SUFFIX, q as MF_DATA_FETCH_TYPE, t as isCSROnly, M as MF_DATA_FETCH_STATUS, j as loadDataFetchModule, e as getDataFetchMap, u as isServerEnv, v as getDataFetchIdWithErrorMsgs, w as DATA_FETCH_ERROR_PREFIX, E as ERROR_TYPE, x as wrapDataFetchId, L as LOAD_REMOTE_ERROR_PREFIX, y as DATA_FETCH_FUNCTION, z as getLoadedRemoteInfos, h as fetchData$1, A as setDataFetchItemLoadedStatus, F as FS_HREF } from "./utils-BBP3hEeV.mjs";
+import React__default, { useRef, useState, useEffect, Suspense } from "react";
+const autoFetchData = () => {
+  initDataFetchMap();
+  injectDataFetch();
+  return {
+    name: "auto-fetch-data-plugin",
+    afterLoadSnapshot(args) {
+      const { id, moduleInfo, remoteSnapshot, host } = args;
+      if (typeof id === "string" && isDataLoaderExpose(id)) {
+        return args;
+      }
+      if (!remoteSnapshot || !id || !("modules" in remoteSnapshot)) {
+        return args;
+      }
+      const { name, alias } = moduleInfo;
+      const dataFetchInfo = getDataFetchInfo({
+        name,
+        alias,
+        id,
+        remoteSnapshot
+      });
+      if (!dataFetchInfo) {
+        return args;
+      }
+      const { dataFetchId, dataFetchName } = dataFetchInfo;
+      const dataFetchMapKey = getDataFetchMapKey(dataFetchInfo, {
+        name: host.name,
+        version: host.options.version
+      });
+      logger.debug(
+        "======= auto fetch plugin dataFetchMapKey: ",
+        dataFetchMapKey
+      );
+      if (!dataFetchMapKey) {
+        return args;
+      }
+      const dataFetchItem = getDataFetchItem(dataFetchMapKey);
+      if (dataFetchItem) {
+        return args;
+      }
+      const dataFetchMap = getDataFetchMap();
+      const hasSSRAsset = Boolean(remoteSnapshot.ssrRemoteEntry);
+      const hasDataFetchClient = Boolean(
+        remoteSnapshot.modules.find(
+          (module) => module.moduleName === `${dataFetchName}${DATA_FETCH_CLIENT_SUFFIX}`
+        )
+      );
+      const downgradeType = hasDataFetchClient ? MF_DATA_FETCH_TYPE.FETCH_CLIENT : hasSSRAsset ? MF_DATA_FETCH_TYPE.FETCH_SERVER : MF_DATA_FETCH_TYPE.FETCH_CLIENT;
+      let finalDataFetchId = dataFetchId;
+      if (!isServerEnv()) {
+        finalDataFetchId = downgradeType === MF_DATA_FETCH_TYPE.FETCH_CLIENT ? hasDataFetchClient ? `${dataFetchId}${DATA_FETCH_CLIENT_SUFFIX}` : dataFetchId : dataFetchId;
+      }
+      const getDataFetchGetter = () => loadDataFetchModule(host, finalDataFetchId);
+      const dataFetchFnItem = [
+        getDataFetchGetter,
+        downgradeType
+      ];
+      if (typeof window === "undefined" || isCSROnly()) {
+        dataFetchFnItem.push(getDataFetchGetter());
+      }
+      dataFetchMap[dataFetchMapKey] = [
+        dataFetchFnItem,
+        void 0,
+        MF_DATA_FETCH_STATUS.AWAIT
+      ];
+      return args;
+    }
+  };
+};
+const EMPTY_HREFS = /* @__PURE__ */ new Set();
+const stylesheetStores = /* @__PURE__ */ new WeakMap();
+function isActiveStylesheet(link) {
+  const rel = link.rel.toLowerCase().split(/\s+/u);
+  const media = link.media.trim().toLowerCase();
+  const type = link.type.trim().toLowerCase().split(";", 1)[0].trim();
+  return rel.includes("stylesheet") && !rel.includes("alternate") && !link.disabled && !link.hasAttribute("disabled") && (!media || media === "all") && (!type || type === "text/css");
+}
+function collectHeadStylesheetHrefs(document) {
+  var _a;
+  const hrefs = /* @__PURE__ */ new Set();
+  (_a = document.head) == null ? void 0 : _a.querySelectorAll("link[href]").forEach((link) => {
+    if (isActiveStylesheet(link)) {
+      hrefs.add(link.href);
+    }
+  });
+  return hrefs;
+}
+function haveSameHrefs(current, next) {
+  if (current.size !== next.size) {
+    return false;
+  }
+  for (const href of current) {
+    if (!next.has(href)) {
+      return false;
+    }
+  }
+  return true;
+}
+function observeHead(store) {
+  store.observer.disconnect();
+  const { document, head, observer } = store;
+  if (head) {
+    observer.observe(head, {
+      attributes: true,
+      attributeFilter: ["disabled", "href", "media", "rel", "type"],
+      childList: true,
+      subtree: true
+    });
+  }
+  if (document.documentElement) {
+    observer.observe(document.documentElement, { childList: true });
+  }
+}
+function refreshHeadStylesheets(store) {
+  if (!store.subscribers.size) {
+    return;
+  }
+  const head = store.document.head;
+  if (head !== store.head) {
+    store.head = head;
+    observeHead(store);
+  }
+  const hrefs = collectHeadStylesheetHrefs(store.document);
+  if (haveSameHrefs(store.hrefs, hrefs)) {
+    return;
+  }
+  store.hrefs = hrefs;
+  store.subscribers.forEach((subscriber) => subscriber(hrefs));
+}
+function getStylesheetStore(document) {
+  var _a;
+  const current = stylesheetStores.get(document);
+  if (current) {
+    return current;
+  }
+  const MutationObserver = ((_a = document.defaultView) == null ? void 0 : _a.MutationObserver) ?? globalThis.MutationObserver;
+  let store;
+  const observer = new MutationObserver(() => refreshHeadStylesheets(store));
+  store = {
+    document,
+    head: document.head,
+    hrefs: collectHeadStylesheetHrefs(document),
+    observer,
+    subscribers: /* @__PURE__ */ new Set()
+  };
+  observeHead(store);
+  stylesheetStores.set(document, store);
+  return store;
+}
+function subscribeToHeadStylesheets(document, subscriber) {
+  const store = getStylesheetStore(document);
+  let subscribed = true;
+  store.subscribers.add(subscriber);
+  subscriber(store.hrefs);
+  return () => {
+    if (!subscribed) {
+      return;
+    }
+    subscribed = false;
+    store.subscribers.delete(subscriber);
+    if (!store.subscribers.size) {
+      store.observer.disconnect();
+      if (stylesheetStores.get(document) === store) {
+        stylesheetStores.delete(document);
+      }
+    }
+  };
+}
+function resolveHref(href, document) {
+  try {
+    return new URL(href, document.baseURI).href;
+  } catch {
+    return href;
+  }
+}
+function HydratedStylesheetAssets({ hrefs }) {
+  const firstLinkRef = useRef(null);
+  const ownerDocumentRef = useRef(null);
+  const [headHrefs, setHeadHrefs] = useState(EMPTY_HREFS);
+  useEffect(() => {
+    var _a;
+    const link = firstLinkRef.current;
+    if (!link) {
+      return;
+    }
+    const ownerDocument = link.ownerDocument;
+    ownerDocumentRef.current = ownerDocument;
+    if (link.getRootNode() !== ownerDocument || ((_a = ownerDocument.head) == null ? void 0 : _a.contains(link))) {
+      return;
+    }
+    return subscribeToHeadStylesheets(ownerDocument, setHeadHrefs);
+  }, []);
+  return /* @__PURE__ */ React__default.createElement(React__default.Fragment, null, hrefs.map(
+    (href, index) => ownerDocumentRef.current && headHrefs.has(resolveHref(href, ownerDocumentRef.current)) ? null : /* @__PURE__ */ React__default.createElement(
+      "link",
+      {
+        key: href,
+        ref: index === 0 ? firstLinkRef : void 0,
+        href,
+        rel: "stylesheet",
+        type: "text/css"
+      }
+    )
+  ));
+}
+function isPromise(obj) {
+  return !!obj && (typeof obj === "object" || typeof obj === "function") && typeof obj.then === "function";
+}
+const AWAIT_ERROR_PREFIX = "<Await /> caught the following error during render: ";
+const transformError = (err) => {
+  const errMsg = err instanceof Error ? err.message : err;
+  const originalMsg = errMsg.replace(AWAIT_ERROR_PREFIX, "");
+  const dataFetchMapKey = getDataFetchIdWithErrorMsgs(originalMsg);
+  if (originalMsg.indexOf(DATA_FETCH_ERROR_PREFIX) === 0) {
+    return {
+      error: new Error(
+        originalMsg.replace(DATA_FETCH_ERROR_PREFIX, "").replace(wrapDataFetchId(dataFetchMapKey), "")
+      ),
+      errorType: ERROR_TYPE.DATA_FETCH,
+      dataFetchMapKey
+    };
+  }
+  if (originalMsg.indexOf(LOAD_REMOTE_ERROR_PREFIX) === 0) {
+    return {
+      error: new Error(
+        originalMsg.replace(LOAD_REMOTE_ERROR_PREFIX, "").replace(wrapDataFetchId(dataFetchMapKey), "")
+      ),
+      errorType: ERROR_TYPE.LOAD_REMOTE,
+      dataFetchMapKey
+    };
+  }
+  return {
+    error: new Error(originalMsg.replace(wrapDataFetchId(dataFetchMapKey), "")),
+    errorType: ERROR_TYPE.UNKNOWN,
+    dataFetchMapKey
+  };
+};
+const DefaultLoading = /* @__PURE__ */ React__default.createElement(React__default.Fragment, null);
+const DefaultErrorElement = (_data) => /* @__PURE__ */ React__default.createElement("div", null, "Error");
+function AwaitDataFetch({
+  resolve,
+  loading = DefaultLoading,
+  errorElement = DefaultErrorElement,
+  children,
+  params,
+  delayLoading
+}) {
+  const dataRef = useRef();
+  const data = dataRef.current || resolve;
+  const getData = isPromise(data) ? fetchData(data, dataRef) : () => data;
+  return /* @__PURE__ */ React__default.createElement(
+    AwaitSuspense,
+    {
+      params,
+      loading,
+      errorElement,
+      delayLoading,
+      resolve: getData
+    },
+    children
+  );
+}
+const DelayedLoading = ({
+  delayLoading,
+  children
+}) => {
+  const [show, setShow] = useState(false);
+  const timerSet = useRef(false);
+  if (!delayLoading) {
+    return children;
+  }
+  if (typeof window !== "undefined" && !show && !timerSet.current) {
+    timerSet.current = true;
+    setTimeout(() => {
+      setShow(true);
+    }, delayLoading);
+  }
+  return show ? children : null;
+};
+function AwaitSuspense({
+  resolve,
+  children,
+  loading = DefaultLoading,
+  errorElement = DefaultErrorElement,
+  delayLoading
+}) {
+  return /* @__PURE__ */ React__default.createElement(
+    Suspense,
+    {
+      fallback: /* @__PURE__ */ React__default.createElement(DelayedLoading, { delayLoading }, loading)
+    },
+    /* @__PURE__ */ React__default.createElement(ResolveAwait, { resolve, errorElement }, children)
+  );
+}
+function ResolveAwait({
+  children,
+  resolve,
+  errorElement,
+  params
+}) {
+  const data = resolve();
+  logger.debug("resolve data: ", data);
+  if (typeof data === "string" && data.indexOf(AWAIT_ERROR_PREFIX) === 0) {
+    const transformedError = transformError(data);
+    return /* @__PURE__ */ React__default.createElement(React__default.Fragment, null, typeof errorElement === "function" ? /* @__PURE__ */ React__default.createElement(React__default.Fragment, null, globalThis.FEDERATION_SSR && /* @__PURE__ */ React__default.createElement(
+      "script",
+      {
+        suppressHydrationWarning: true,
+        dangerouslySetInnerHTML: {
+          __html: String.raw`
+                  globalThis['${DATA_FETCH_FUNCTION}'] = globalThis['${DATA_FETCH_FUNCTION}']  || []
+                  globalThis['${DATA_FETCH_FUNCTION}'].push([${transformedError.dataFetchMapKey ? `'${transformedError.dataFetchMapKey}'` : ""},${params ? JSON.stringify(params) : null},true]);`
+        }
+      }
+    ), errorElement(transformedError)) : errorElement);
+  }
+  const toRender = typeof children === "function" ? children(data) : children;
+  return /* @__PURE__ */ React__default.createElement(React__default.Fragment, null, toRender);
+}
+const fetchData = (promise, ref) => {
+  let data;
+  let status = "pending";
+  const suspender = promise.then((res) => {
+    status = "success";
+    data = res;
+    ref.current = res;
+  }).catch((e) => {
+    status = "success";
+    console.warn(e);
+    data = AWAIT_ERROR_PREFIX + e;
+  });
+  return () => {
+    if (status === "pending") {
+      throw suspender;
+    }
+    return data;
+  };
+};
+function getTargetModuleInfo(id, instance) {
+  if (!instance) {
+    return;
+  }
+  const loadedRemoteInfo = getLoadedRemoteInfos(id, instance);
+  if (!loadedRemoteInfo) {
+    return;
+  }
+  const { snapshot } = loadedRemoteInfo;
+  if (!snapshot) {
+    return;
+  }
+  const publicPath = "publicPath" in snapshot ? snapshot.publicPath : "getPublicPath" in snapshot ? new Function(snapshot.getPublicPath)() : "";
+  if (!publicPath) {
+    return;
+  }
+  const modules = "modules" in snapshot ? snapshot.modules : [];
+  const targetModule = modules.find(
+    (m) => m.modulePath === loadedRemoteInfo.expose
+  );
+  if (!targetModule) {
+    return;
+  }
+  const remoteEntry = "remoteEntry" in snapshot ? snapshot.remoteEntry : "";
+  if (!remoteEntry) {
+    return;
+  }
+  return {
+    module: targetModule,
+    publicPath,
+    remoteEntry
+  };
+}
+function collectSSRAssetDescriptors(options) {
+  const {
+    id,
+    injectLink = true,
+    injectScript = false
+  } = typeof options === "string" ? { id: options } : options;
+  const stylesheetHrefs = [];
+  const scriptSrcs = [];
+  const instance = options.instance;
+  if (!instance || !injectLink && !injectScript) {
+    return { scriptSrcs, stylesheetHrefs };
+  }
+  const moduleAndPublicPath = getTargetModuleInfo(id, instance);
+  if (!moduleAndPublicPath) {
+    return { scriptSrcs, stylesheetHrefs };
+  }
+  const { module: targetModule, publicPath, remoteEntry } = moduleAndPublicPath;
+  if (injectLink) {
+    const seenStylesheetHrefs = /* @__PURE__ */ new Set();
+    [...targetModule.assets.css.sync, ...targetModule.assets.css.async].sort().forEach((file) => {
+      const href = `${publicPath}${file}`;
+      if (seenStylesheetHrefs.has(href)) {
+        return;
+      }
+      seenStylesheetHrefs.add(href);
+      stylesheetHrefs.push(href);
+    });
+  }
+  if (injectScript) {
+    scriptSrcs.push(`${publicPath}${remoteEntry}`);
+    [...targetModule.assets.js.sync].sort().forEach((file) => {
+      scriptSrcs.push(`${publicPath}${file}`);
+    });
+  }
+  return { scriptSrcs, stylesheetHrefs };
+}
+function renderScriptAssets(scriptSrcs) {
+  return scriptSrcs.map((src) => /* @__PURE__ */ React__default.createElement("script", { key: src, async: true, src, crossOrigin: "anonymous" }));
+}
+function collectSSRAssets(options) {
+  const { scriptSrcs, stylesheetHrefs } = collectSSRAssetDescriptors(options);
+  return [
+    ...renderScriptAssets(scriptSrcs),
+    ...stylesheetHrefs.map((href) => /* @__PURE__ */ React__default.createElement("link", { key: href, href, rel: "stylesheet", type: "text/css" }))
+  ];
+}
+function getServerNeedRemoteInfo(loadedRemoteInfo, id, noSSR) {
+  var _a;
+  if (noSSR || typeof window !== "undefined" && window.location.href !== window[FS_HREF]) {
+    if (!(loadedRemoteInfo == null ? void 0 : loadedRemoteInfo.version)) {
+      throw new Error(`${loadedRemoteInfo == null ? void 0 : loadedRemoteInfo.name} version is empty`);
+    }
+    const { snapshot } = loadedRemoteInfo;
+    if (!snapshot) {
+      throw new Error(`${loadedRemoteInfo == null ? void 0 : loadedRemoteInfo.name} snapshot is empty`);
+    }
+    const dataFetchItem = getDataFetchItem(id);
+    const isFetchServer = ((_a = dataFetchItem == null ? void 0 : dataFetchItem[0]) == null ? void 0 : _a[1]) === MF_DATA_FETCH_TYPE.FETCH_SERVER;
+    if (isFetchServer && (!("ssrPublicPath" in snapshot) || !snapshot.ssrPublicPath)) {
+      throw new Error(
+        `ssrPublicPath is required while fetching ${loadedRemoteInfo == null ? void 0 : loadedRemoteInfo.name} data in SSR project!`
+      );
+    }
+    if (isFetchServer && (!("ssrRemoteEntry" in snapshot) || !snapshot.ssrRemoteEntry)) {
+      throw new Error(
+        `ssrRemoteEntry is required while loading ${loadedRemoteInfo == null ? void 0 : loadedRemoteInfo.name} data loader in SSR project!`
+      );
+    }
+    return {
+      name: loadedRemoteInfo.name,
+      version: loadedRemoteInfo.version,
+      ssrPublicPath: "ssrPublicPath" in snapshot ? snapshot.ssrPublicPath || "" : "",
+      ssrRemoteEntry: "ssrRemoteEntry" in snapshot ? snapshot.ssrRemoteEntry || "" : "",
+      globalName: loadedRemoteInfo.entryGlobalName
+    };
+  }
+  return void 0;
+}
+function createLazyComponent(options) {
+  const { instance, injectScript, injectLink } = options;
+  if (!instance) {
+    throw new Error("instance is required for createLazyComponent!");
+  }
+  const exportName = (options == null ? void 0 : options.export) || "default";
+  const callLoader = async () => {
+    logger.debug("callLoader start", Date.now());
+    const m = await options.loader();
+    logger.debug("callLoader end", Date.now());
+    if (!m) {
+      throw new Error("load remote failed");
+    }
+    return m;
+  };
+  const getData = async (noSSR) => {
+    let loadedRemoteInfo;
+    let moduleId;
+    try {
+      const m = await callLoader();
+      moduleId = m && m[Symbol.for("mf_module_id")];
+      if (!moduleId) {
+        throw new Error("moduleId is empty");
+      }
+      loadedRemoteInfo = getLoadedRemoteInfos(moduleId, instance);
+      if (!loadedRemoteInfo) {
+        throw new Error(`can not find loaded remote('${moduleId}') info!`);
+      }
+    } catch (e) {
+      const errMsg = `${LOAD_REMOTE_ERROR_PREFIX}${e}`;
+      logger.debug(e);
+      throw new Error(errMsg);
+    }
+    let dataFetchMapKey;
+    try {
+      dataFetchMapKey = getDataFetchMapKey(
+        getDataFetchInfo({
+          name: loadedRemoteInfo.name,
+          alias: loadedRemoteInfo.alias,
+          id: moduleId,
+          remoteSnapshot: loadedRemoteInfo.snapshot
+        }),
+        { name: instance.name, version: instance.options.version }
+      );
+      logger.debug("getData dataFetchMapKey: ", dataFetchMapKey);
+      if (!dataFetchMapKey) {
+        return;
+      }
+      const data = await fetchData$1(
+        dataFetchMapKey,
+        {
+          ...options.dataFetchParams,
+          isDowngrade: false
+        },
+        getServerNeedRemoteInfo(loadedRemoteInfo, dataFetchMapKey, noSSR)
+      );
+      setDataFetchItemLoadedStatus(dataFetchMapKey);
+      logger.debug("get data res: \n", data);
+      return data;
+    } catch (err) {
+      const errMsg = `${DATA_FETCH_ERROR_PREFIX}${wrapDataFetchId(dataFetchMapKey)}${err}`;
+      logger.debug(errMsg);
+      throw new Error(errMsg);
+    }
+  };
+  const LazyComponent = React__default.lazy(async () => {
+    const m = await callLoader();
+    const moduleId = m && m[Symbol.for("mf_module_id")];
+    const loadedRemoteInfo = getLoadedRemoteInfos(moduleId, instance);
+    loadedRemoteInfo == null ? void 0 : loadedRemoteInfo.snapshot;
+    const dataFetchMapKey = loadedRemoteInfo ? getDataFetchMapKey(
+      getDataFetchInfo({
+        name: loadedRemoteInfo.name,
+        alias: loadedRemoteInfo.alias,
+        id: moduleId,
+        remoteSnapshot: loadedRemoteInfo.snapshot
+      }),
+      { name: instance.name, version: instance == null ? void 0 : instance.options.version }
+    ) : void 0;
+    logger.debug("LazyComponent dataFetchMapKey: ", dataFetchMapKey);
+    const { scriptSrcs, stylesheetHrefs } = collectSSRAssetDescriptors({
+      id: moduleId,
+      instance,
+      injectLink,
+      injectScript
+    });
+    const assets = [
+      ...renderScriptAssets(scriptSrcs),
+      /* @__PURE__ */ React__default.createElement(HydratedStylesheetAssets, { key: "stylesheets", hrefs: stylesheetHrefs })
+    ];
+    const Com = m[exportName];
+    if (exportName in m && typeof Com === "function") {
+      return {
+        default: (props) => /* @__PURE__ */ React__default.createElement(React__default.Fragment, null, globalThis.FEDERATION_SSR && dataFetchMapKey && /* @__PURE__ */ React__default.createElement(
+          "script",
+          {
+            suppressHydrationWarning: true,
+            dangerouslySetInnerHTML: {
+              __html: String.raw`
+                  globalThis['${DATA_FETCH_FUNCTION}'] = globalThis['${DATA_FETCH_FUNCTION}'] || [];
+                  globalThis['${DATA_FETCH_FUNCTION}'].push(['${dataFetchMapKey}',${JSON.stringify(props.mfData)}]);
+                  `
+            }
+          }
+        ), globalThis.FEDERATION_SSR && assets, /* @__PURE__ */ React__default.createElement(Com, { ...props }))
+      };
+    } else {
+      throw Error(
+        `Make sure that ${moduleId} has the correct export when export is ${String(
+          exportName
+        )}`
+      );
+    }
+  });
+  return (props) => {
+    const { key, ...args } = props;
+    if (!options.noSSR) {
+      return /* @__PURE__ */ React__default.createElement(
+        AwaitDataFetch,
+        {
+          resolve: getData(options.noSSR),
+          loading: options.loading,
+          delayLoading: options.delayLoading,
+          errorElement: options.fallback
+        },
+        (data) => /* @__PURE__ */ React__default.createElement(LazyComponent, { ...args, mfData: data })
+      );
+    } else {
+      const [data, setData] = useState(null);
+      const [loading, setLoading] = useState(true);
+      const [error, setError] = useState(null);
+      useEffect(() => {
+        let isMounted = true;
+        const fetchDataAsync = async () => {
+          try {
+            setLoading(true);
+            const result = await getData(options.noSSR);
+            if (isMounted) {
+              setData(result);
+            }
+          } catch (e) {
+            if (isMounted) {
+              setError(transformError(e));
+            }
+          } finally {
+            if (isMounted) {
+              setLoading(false);
+            }
+          }
+        };
+        fetchDataAsync();
+        return () => {
+          isMounted = false;
+        };
+      }, []);
+      if (loading) {
+        return /* @__PURE__ */ React__default.createElement(DelayedLoading, { delayLoading: options.delayLoading }, options.loading);
+      }
+      if (error) {
+        return /* @__PURE__ */ React__default.createElement(React__default.Fragment, null, typeof options.fallback === "function" ? options.fallback(error) : options.fallback);
+      }
+      return /* @__PURE__ */ React__default.createElement(LazyComponent, { ...args, mfData: data });
+    }
+  };
+}
+function lazyLoadComponentPlugin() {
+  return {
+    name: "lazy-load-component-plugin",
+    apply(instance) {
+      instance.registerPlugins([autoFetchData()]);
+      instance.createLazyComponent = (options) => {
+        return createLazyComponent({
+          instance,
+          ...options
+        });
+      };
+      instance.prefetch = (options) => {
+        return prefetch({
+          instance,
+          ...options
+        });
+      };
+      instance.collectSSRAssets = (options) => {
+        return collectSSRAssets({
+          instance,
+          ...options
+        });
+      };
+    }
+  };
+}
+export {
+  autoFetchData as a,
+  createLazyComponent as b,
+  collectSSRAssets as c,
+  lazyLoadComponentPlugin as l
+};

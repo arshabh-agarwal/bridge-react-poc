@@ -1,0 +1,26 @@
+export declare const PLUGIN_IDENTIFIER = "[ Module Federation React ]";
+export declare const DOWNGRADE_KEY = "_mfSSRDowngrade";
+export declare const DATA_FETCH_MAP_KEY = "__MF_DATA_FETCH_MAP__";
+export declare const DATA_FETCH_FUNCTION = "_mfDataFetch";
+export declare const FS_HREF = "_mfFSHref";
+export declare const ERROR_TYPE: {
+    DATA_FETCH: number;
+    LOAD_REMOTE: number;
+    UNKNOWN: number;
+};
+export declare const WRAP_DATA_FETCH_ID_IDENTIFIER = "wrap_dfip_identifier";
+export declare const enum MF_DATA_FETCH_TYPE {
+    FETCH_SERVER = 1,
+    FETCH_CLIENT = 2
+}
+export declare const enum MF_DATA_FETCH_STATUS {
+    LOADED = 1,
+    LOADING = 2,
+    AWAIT = 0,
+    ERROR = 3
+}
+export declare const DATA_FETCH_IDENTIFIER = "data";
+export declare const DATA_FETCH_CLIENT_SUFFIX = ".client";
+export declare const DATA_FETCH_QUERY = "x-mf-data-fetch";
+export declare const DATA_FETCH_ERROR_PREFIX = "caught the following error during dataFetch: ";
+export declare const LOAD_REMOTE_ERROR_PREFIX = "caught the following error during loadRemote: ";

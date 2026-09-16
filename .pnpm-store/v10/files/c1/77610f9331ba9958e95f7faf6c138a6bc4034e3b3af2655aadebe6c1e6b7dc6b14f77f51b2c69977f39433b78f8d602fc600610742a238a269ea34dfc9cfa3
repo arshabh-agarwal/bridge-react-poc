@@ -1,0 +1,6 @@
+"use strict";
+Object.defineProperties(exports, { __esModule: { value: true }, [Symbol.toStringTag]: { value: "Module" } });
+const lazyLoadComponentPlugin = require("./lazy-load-component-plugin-CRqjWQ5N.js");
+require("./prefetch-CMvAw8F3.js");
+exports.default = lazyLoadComponentPlugin.lazyLoadComponentPlugin;
+exports.lazyLoadComponentPlugin = lazyLoadComponentPlugin.lazyLoadComponentPlugin;

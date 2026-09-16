@@ -1,0 +1,8 @@
+import React from 'react';
+import { RemoteAppWrapper } from '../RemoteAppWrapper';
+interface ExtraDataProps {
+    basename?: string;
+}
+export declare function withRouterData<P extends Parameters<typeof RemoteAppWrapper>[0]>(WrappedComponent: React.ComponentType<P & ExtraDataProps>): React.FC<Omit<P, keyof ExtraDataProps>>;
+declare const _default: React.FC<Omit<Omit<import("../../types").RemoteAppParams & import("../..").RemoteComponentProps<Record<string, unknown>>, "ref"> & React.RefAttributes<unknown>, "basename">>;
+export default _default;

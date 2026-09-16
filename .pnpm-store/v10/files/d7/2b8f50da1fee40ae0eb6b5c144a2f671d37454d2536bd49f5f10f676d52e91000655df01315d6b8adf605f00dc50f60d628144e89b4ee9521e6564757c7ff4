@@ -1,0 +1,28 @@
+import type { getInstance } from '@module-federation/runtime';
+import React, { ReactNode } from 'react';
+import type { ErrorInfo } from './AwaitDataFetch';
+import type { DataFetchParams } from './types';
+export type IProps = {
+    id: string;
+    instance: ReturnType<typeof getInstance>;
+    injectScript?: boolean;
+    injectLink?: boolean;
+};
+export type CreateLazyComponentOptions<T, E extends keyof T> = {
+    loader: () => Promise<T>;
+    instance: ReturnType<typeof getInstance>;
+    loading: React.ReactNode;
+    delayLoading?: number;
+    fallback: ReactNode | ((errorInfo: ErrorInfo) => ReactNode);
+    export?: E;
+    dataFetchParams?: DataFetchParams;
+    noSSR?: boolean;
+    injectScript?: boolean;
+    injectLink?: boolean;
+};
+type ReactKey = {
+    key?: React.Key | null;
+};
+export declare function collectSSRAssets(options: IProps): React.ReactNode[];
+export declare function createLazyComponent<T, E extends keyof T>(options: CreateLazyComponentOptions<T, E>): (props: T[E] extends (...args: any) => any ? Parameters<T[E]>[0] extends undefined ? ReactKey : Parameters<T[E]>[0] & ReactKey : ReactKey) => React.JSX.Element;
+export {};

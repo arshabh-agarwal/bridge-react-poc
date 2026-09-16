@@ -1,0 +1,130 @@
+import { R as RemoteAppWrapper, c as createRemoteAppComponentFactory, a as createDeprecatedRemoteComponentFactory } from "./createHelpers-D3Sg5lKp.mjs";
+import { b } from "./createHelpers-D3Sg5lKp.mjs";
+import { a, c, b as b2, l } from "./lazy-load-component-plugin-CyRfqVSE.mjs";
+import { C, a as a2, E, c as c2, b as b3, d, g, r, s } from "./utils-BBP3hEeV.mjs";
+import { callDataFetch } from "./data-fetch-utils.es.js";
+import React__default, { forwardRef, useContext, useState, useEffect } from "react";
+import * as ReactRouterDOM from "react-router-dom";
+import { p as pathJoin, L as LoggerInstance } from "./index-Bs2NxD2z.mjs";
+import { federationRuntime } from "./plugin.es.js";
+import { p } from "./prefetch-xvZIEaJL.mjs";
+function e() {
+  const t = new PopStateEvent("popstate", { state: window.history.state });
+  window.dispatchEvent(t);
+}
+function withRouterData(WrappedComponent) {
+  const Component = forwardRef(function(props, ref) {
+    var _a;
+    if (props == null ? void 0 : props.basename) {
+      return /* @__PURE__ */ React__default.createElement(WrappedComponent, { ...props, basename: props.basename, ref });
+    }
+    let enableDispathPopstate = false;
+    let routerContextVal;
+    try {
+      ReactRouterDOM.useLocation();
+      enableDispathPopstate = true;
+    } catch {
+      enableDispathPopstate = false;
+    }
+    let basename = "/";
+    if (!props.basename && enableDispathPopstate) {
+      const ReactRouterDOMAny = ReactRouterDOM;
+      const useRouteMatch = ReactRouterDOMAny["useRouteMatch"];
+      const useHistory = ReactRouterDOMAny["useHistory"];
+      const useHref = ReactRouterDOMAny["useHref"];
+      const UNSAFE_RouteContext = ReactRouterDOMAny["UNSAFE_RouteContext"];
+      if (UNSAFE_RouteContext) {
+        if (useHref) {
+          basename = useHref == null ? void 0 : useHref("/");
+        }
+        routerContextVal = useContext(UNSAFE_RouteContext);
+        if (routerContextVal && routerContextVal.matches && routerContextVal.matches.length > 0) {
+          const matchIndex = routerContextVal.matches.length - 1;
+          const pathnameBase = routerContextVal.matches[matchIndex].pathnameBase;
+          basename = pathJoin(basename, pathnameBase || "/");
+        }
+      } else {
+        const match = useRouteMatch == null ? void 0 : useRouteMatch();
+        if (useHistory) {
+          const history = useHistory == null ? void 0 : useHistory();
+          basename = (_a = history == null ? void 0 : history.createHref) == null ? void 0 : _a.call(history, { pathname: "/" });
+        }
+        if (match) {
+          basename = pathJoin(basename, (match == null ? void 0 : match.path) || "/");
+        }
+      }
+    }
+    LoggerInstance.debug(`createRemoteAppComponent withRouterData >>>`, {
+      ...props,
+      basename,
+      routerContextVal,
+      enableDispathPopstate
+    });
+    if (enableDispathPopstate) {
+      const location = ReactRouterDOM.useLocation();
+      const [pathname, setPathname] = useState(location.pathname);
+      useEffect(() => {
+        var _a2;
+        if (pathname !== "" && pathname !== location.pathname) {
+          LoggerInstance.debug(
+            `createRemoteAppComponent dispatchPopstateEnv >>>`,
+            {
+              name: props.name,
+              pathname: location.pathname
+            }
+          );
+          const route = {
+            action: "host-to-remote",
+            mechanism: "popstate",
+            from: pathname,
+            to: location.pathname,
+            basename
+          };
+          const operationContext = {
+            side: "consumer",
+            framework: "react",
+            operation: "route-sync",
+            moduleName: props.moduleName,
+            route
+          };
+          e();
+          (_a2 = federationRuntime.instance) == null ? void 0 : _a2.bridgeHook.lifecycle.afterBridgeRouteSync.emit(
+            {
+              context: operationContext
+            }
+          );
+        }
+        setPathname(location.pathname);
+      }, [location]);
+    }
+    return /* @__PURE__ */ React__default.createElement(WrappedComponent, { ...props, basename, ref });
+  });
+  return forwardRef(function(props, ref) {
+    return /* @__PURE__ */ React__default.createElement(Component, { ...props, ref });
+  });
+}
+const RemoteApp = withRouterData(RemoteAppWrapper);
+const createRemoteAppComponent = createRemoteAppComponentFactory(RemoteApp);
+const createRemoteComponent = createDeprecatedRemoteComponentFactory(
+  createRemoteAppComponent
+);
+export {
+  C as CacheSize,
+  a2 as CacheTime,
+  E as ERROR_TYPE,
+  a as autoFetchDataPlugin,
+  c2 as cache,
+  callDataFetch,
+  b3 as clearStore,
+  c as collectSSRAssets,
+  d as configureCache,
+  b as createBridgeComponent,
+  b2 as createLazyComponent,
+  createRemoteAppComponent,
+  createRemoteComponent,
+  g as generateKey,
+  l as lazyLoadComponentPlugin,
+  p as prefetch,
+  r as revalidateTag,
+  s as setSSREnv
+};

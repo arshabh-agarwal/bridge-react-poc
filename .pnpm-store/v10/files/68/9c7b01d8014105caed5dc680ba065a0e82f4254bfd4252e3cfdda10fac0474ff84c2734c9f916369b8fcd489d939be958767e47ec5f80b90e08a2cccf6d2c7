@@ -1,0 +1,34 @@
+import type { CacheConfig, DataFetch, DataFetchParams } from '../types';
+export declare const CacheSize: {
+    readonly KB: 1024;
+    readonly MB: number;
+    readonly GB: number;
+};
+export declare const CacheTime: {
+    readonly SECOND: 1000;
+    readonly MINUTE: number;
+    readonly HOUR: number;
+    readonly DAY: number;
+    readonly WEEK: number;
+    readonly MONTH: number;
+};
+export type CacheStatus = 'hit' | 'stale' | 'miss';
+export interface CacheStatsInfo {
+    status: CacheStatus;
+    key: string | symbol;
+    params: DataFetchParams;
+    result: any;
+}
+interface CacheOptions {
+    tag?: string | string[];
+    maxAge?: number;
+    revalidate?: number;
+    getKey?: <Args extends any[]>(...args: Args) => string;
+    onCache?: (info: CacheStatsInfo) => boolean;
+}
+export declare function configureCache(config: CacheConfig): void;
+export declare function generateKey(dataFetchOptions: DataFetchParams): string;
+export declare function cache<T>(fn: DataFetch<T>, options?: CacheOptions): DataFetch<T>;
+export declare function revalidateTag(tag: string): void;
+export declare function clearStore(): void;
+export {};

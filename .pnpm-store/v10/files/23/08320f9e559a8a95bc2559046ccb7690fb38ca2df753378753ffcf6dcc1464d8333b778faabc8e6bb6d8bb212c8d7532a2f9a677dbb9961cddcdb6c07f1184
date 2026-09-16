@@ -1,0 +1,6 @@
+import React from 'react';
+declare function WraperRouter(props: Record<string, unknown>): React.JSX.Element;
+declare function WraperRouterProvider(props: Record<string, unknown>): React.JSX.Element;
+export * from 'react-router';
+export { WraperRouter as BrowserRouter };
+export { WraperRouterProvider as RouterProvider };
