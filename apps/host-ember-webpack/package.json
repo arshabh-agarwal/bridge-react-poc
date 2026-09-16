@@ -1,0 +1,42 @@
+{
+  "name": "host-ember-webpack",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Ember 3.28 host (Embroider + webpack) mounting bridge-react remotes",
+  "license": "MIT",
+  "scripts": {
+    "build": "ember build --environment=production",
+    "dev": "ember serve --port 4200",
+    "start": "ember serve --port 4200"
+  },
+  "devDependencies": {
+    "@babel/plugin-proposal-decorators": "^7.21.0",
+    "@ember/optional-features": "^2.0.0",
+    "@ember/render-modifiers": "^2.1.0",
+    "@ember/string": "^3.0.1",
+    "@embroider/compat": "^3.9.0",
+    "@embroider/core": "^3.5.9",
+    "@embroider/webpack": "^4.1.0",
+    "@glimmer/component": "^1.1.2",
+    "@glimmer/tracking": "^1.1.2",
+    "@poc/bridge-ember": "workspace:*",
+    "broccoli-asset-rev": "^3.0.0",
+    "ember-auto-import": "^2.6.3",
+    "ember-cli": "~4.12.3",
+    "ember-cli-babel": "^7.26.11",
+    "ember-cli-dependency-checker": "^3.3.1",
+    "ember-cli-htmlbars": "^6.2.0",
+    "ember-cli-inject-live-reload": "^2.1.0",
+    "ember-load-initializers": "^2.1.2",
+    "ember-resolver": "^8.1.0",
+    "ember-source": "~3.28.12",
+    "loader.js": "^4.7.0",
+    "webpack": "^5.78.0"
+  },
+  "engines": {
+    "node": ">= 18"
+  },
+  "ember": {
+    "edition": "octane"
+  }
+}

@@ -1,0 +1,13 @@
+<div class="remote-mount" data-remote={{@remote}} data-status={{this.status}} ...attributes>
+  {{#if this.isLoading}}
+    <p class="remote-mount__loading">Loading {{@remote}}...</p>
+  {{/if}}
+  {{#if this.isError}}
+    <div class="remote-mount__error" role="alert">
+      <strong>{{@remote}} failed to load</strong>
+      <pre>{{this.error.message}}</pre>
+    </div>
+  {{/if}}
+  {{! The remote renders into this node. It must stay mounted for the life of the route. }}
+  <div class="remote-mount__target" {{did-insert this.mount}} {{will-destroy this.unmount}}></div>
+</div>

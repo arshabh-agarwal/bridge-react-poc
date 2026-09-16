@@ -16,6 +16,11 @@ export interface AppProps {
   remoteName?: string;
   /** Callback for leaving the remote's URL prefix. Provided by the host adapter. */
   onHostNavigate?: (path: string) => void;
+  /**
+   * Called with the full URL (path + search + hash) whenever the remote navigates internally.
+   * Hosts whose routers don't observe pushState (Ember) use this to keep their own state in sync.
+   */
+  onRouteChange?: (url: string) => void;
 }
 
 const routes: RouteObject[] = [
@@ -31,9 +36,28 @@ const routes: RouteObject[] = [
   },
 ];
 
-export function App({ basename = '/', remoteName = 'remote', onHostNavigate }: AppProps) {
+export function App({
+  basename = '/',
+  remoteName = 'remote',
+  onHostNavigate,
+  onRouteChange,
+}: AppProps) {
   // The remote owns everything under `basename`. Recreate the router only if the prefix changes.
   const router = useMemo(() => createBrowserRouter(routes, { basename }), [basename]);
+
+  // Remote -> host route notification (only for navigations the remote initiated).
+  useEffect(() => {
+    if (!onRouteChange) return;
+    let last = window.location.pathname + window.location.search + window.location.hash;
+    return router.subscribe((state) => {
+      if (state.historyAction === 'POP') return; // back/forward or host-dispatched popstate
+      const { pathname, search, hash } = window.location;
+      const url = pathname + search + hash;
+      if (url === last) return;
+      last = url;
+      onRouteChange(url);
+    });
+  }, [router, onRouteChange]);
 
   const ctx = useMemo<RemoteContextValue>(
     () => ({ basename, remoteName, reactVersion, onHostNavigate }),
