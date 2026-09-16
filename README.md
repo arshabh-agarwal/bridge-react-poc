@@ -33,6 +33,14 @@ Host chrome is the header and left nav. The dashed box is the remote: its tabs, 
 
 <video src="docs/demo.mp4" controls width="100%"></video>
 
+React 18 host (TanStack Router) with remote19 mounted — two React copies, both `useEffect`s running:
+
+![host-react18](docs/screenshots/host-react18.png)
+
+Ember 3.28 webpack host with the same remote:
+
+![host-ember-webpack](docs/screenshots/host-ember-webpack.png)
+
 ## Run
 
 ```sh
