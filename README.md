@@ -25,6 +25,26 @@ the remote and the remote owning every route under it.
 
 Every host mounts both remotes at `/remote18/*` and `/remote19/*`.
 
+## Screenshots
+
+Host chrome is the header and left nav. The dashed box is the remote: its tabs, routes, and a live `useEffect` probe so you can see whether React is shared or isolated.
+
+Dashboard — all four hosts on the same remote route:
+
+![Dashboard with four hosts in iframes](docs/screenshots/dashboard.png)
+
+React 18 host + React 19 remote (`singleton: false`, two React copies, both `useEffect`s ticking):
+
+![host-react18 mounting remote19](docs/screenshots/host-react18-remote19.png)
+
+React 18 host + React 18 remote (one shared React copy):
+
+![host-react18 mounting remote18](docs/screenshots/host-react18-remote18.png)
+
+Ember 3.28 webpack host. Same remote, no host React:
+
+![host-ember-webpack mounting remote18](docs/screenshots/host-ember-webpack-remote18.png)
+
 ## Run
 
 ```sh
