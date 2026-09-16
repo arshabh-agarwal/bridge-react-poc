@@ -55,23 +55,23 @@ warning; it works.
 
 ```mermaid
 sequenceDiagram
-  participant Host as Host router (TanStack / Ember)
-  participant Adapter as bridge-tanstack / bridge-ember
-  participant Provider as bridge-react provider
+  participant Host as Host router
+  participant Adapter as Host adapter
+  participant Provider as bridge-react
   participant Remote as Remote react-router
 
-  Host->>Adapter: route /remote18/* matched
-  Adapter->>Provider: loadRemote('remote18/export-app').default()
-  Adapter->>Provider: render({ dom, basename: '/remote18', onHostNavigate, onRouteChange })
-  Provider->>Remote: createBrowserRouter(routes, { basename })
+  Host->>Adapter: match /remote18/*
+  Adapter->>Provider: loadRemote remote18/export-app
+  Adapter->>Provider: render with basename /remote18
+  Provider->>Remote: createBrowserRouter with that basename
   Note over Remote: owns everything under /remote18
   Host->>Adapter: host navigates to /remote18/about
   Adapter->>Remote: dispatch synthetic popstate
-  Remote->>Adapter: onRouteChange('/remote18/items/1') after internal Link
-  Adapter->>Host: replaceWith(url) (Ember only; TanStack already patches pushState)
-  Remote->>Adapter: onHostNavigate('/')
-  Adapter->>Host: navigate('/') -> route unmounts
-  Adapter->>Provider: destroy({ dom })
+  Remote->>Adapter: onRouteChange after an internal Link
+  Adapter->>Host: Ember replaceWith - TanStack already sees pushState
+  Remote->>Adapter: onHostNavigate to host home
+  Adapter->>Host: navigate home and unmount remote
+  Adapter->>Provider: destroy the remote root
 ```
 
 - The remote receives `basename` from `render()` and builds its own `createBrowserRouter`.
