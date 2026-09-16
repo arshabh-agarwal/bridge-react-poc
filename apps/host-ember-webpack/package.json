@@ -18,6 +18,7 @@
     "@embroider/core": "^3.5.9",
     "@embroider/webpack": "^4.1.0",
     "@glimmer/component": "^1.1.2",
+    "@module-federation/enhanced": "^2.9.0",
     "@glimmer/tracking": "^1.1.2",
     "@poc/bridge-ember": "workspace:*",
     "broccoli-asset-rev": "^3.0.0",

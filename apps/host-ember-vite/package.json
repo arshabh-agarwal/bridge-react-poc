@@ -24,6 +24,7 @@
     "@embroider/vite": "^1.7.2",
     "@glimmer/component": "^1.1.2",
     "@glimmer/tracking": "^1.1.2",
+    "@module-federation/vite": "^1.22.0",
     "@poc/bridge-ember": "workspace:*",
     "@rollup/plugin-babel": "^7.0.0",
     "babel-plugin-ember-template-compilation": "^3.1.0",

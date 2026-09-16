@@ -12,8 +12,8 @@ the remote and the remote owning every route under it.
 | `apps/remote-react19` | React 19.3, react-router v7, Vite + `@module-federation/vite`, `bridge-react/v19` | 3019 |
 | `apps/host-react18` | React 18.3, TanStack Router, Vite + `@module-federation/vite` | 4018 |
 | `apps/host-react19` | React 19.3, TanStack Router, Vite + `@module-federation/vite` | 4019 |
-| `apps/host-ember-webpack` | Ember 3.28, Embroider 3.x + webpack, MF runtime only | 4200 |
-| `apps/host-ember-vite` | Ember 3.28, Embroider 4.x + `@embroider/vite`, MF runtime only | 4201 |
+| `apps/host-ember-webpack` | Ember 3.28, Embroider 3.x + webpack, `@module-federation/enhanced/webpack` | 4200 |
+| `apps/host-ember-vite` | Ember 3.28, Embroider 4.x + `@embroider/vite`, `@module-federation/vite` | 4201 |
 
 | Package | Purpose |
 | --- | --- |
@@ -77,12 +77,27 @@ sequenceDiagram
 `@module-federation/bridge-react/base`, passes `basename`, dispatches `popstate` on TanStack
 location changes, injects `onHostNavigate`.
 
-`packages/bridge-ember` (v2 addon, ~100 lines): `remote-loader` service owns a
-`@module-federation/runtime` instance configured from `config/environment.js` and caches
-providers; `<RemoteMount @remote @basename @props>` calls `render` on `did-insert`, `destroy`
-on `will-destroy`, forwards `routeDidChange` as `popstate`, and resyncs Ember on
-`onRouteChange` with a `replaceWith`. Ember shares nothing with React, so no bundler-level MF
-plugin is used in either Ember flavor; the runtime alone fetches and evaluates remote entries.
+`packages/bridge-ember` (v2 addon, ~100 lines): `remote-loader` service resolves the
+`@module-federation/runtime` instance and caches providers; `<RemoteMount @remote @basename
+@props>` calls `render` on `did-insert`, `destroy` on `will-destroy`, forwards `routeDidChange`
+as `popstate`, and resyncs Ember on `onRouteChange` with a `replaceWith`.
+
+The service supports two modes, chosen by `config/environment.js`:
+
+- **Bundler plugin (used by both Ember apps).** Remotes are declared in the build:
+  `ModuleFederationPlugin` from `@module-federation/enhanced/webpack` inside Embroider's
+  `packagerOptions.webpackConfig.plugins` (`apps/host-ember-webpack/ember-cli-build.js`), and
+  `federation()` from `@module-federation/vite` in `apps/host-ember-vite/vite.config.mjs`. The
+  plugin initialises the runtime before Ember boots; the service finds that instance with
+  `getInstance(inst => inst.name === config.moduleFederation.name)`.
+- **Runtime only.** If `config.moduleFederation.remotes` is set, the service calls
+  `createInstance()` itself and no bundler plugin is needed. Useful for hosts whose build you
+  cannot touch.
+
+The webpack host points its remotes at the Vite remotes' `mf-manifest.json` rather than
+`remoteEntry.js`: the manifest carries `remoteEntry.type: 'module'`, which is how a webpack host
+learns to `import()` an ESM remote instead of injecting a script tag. `shared: {}` in both,
+since Ember shares nothing with React.
 
 ## Verification matrix
 
@@ -100,6 +115,14 @@ remote internal link, swap to the other remote, browser back, "Back to host home
 | host-ember-webpack | remote19 | remote's own | ok | ok | ok | ok | ok | ok |
 | host-ember-vite | remote18 | remote's own | ok | ok | ok | ok | ok | ok |
 | host-ember-vite | remote19 | remote's own | ok | ok | ok | ok | ok | ok |
+
+Forward was additionally checked on host-react18 and host-ember-webpack with a 10-step
+back/back/back/forward/forward/forward sequence that crosses remotes; URL, host state and
+remote content agreed at every step, with exactly one history entry per navigation.
+
+The Ember rows were re-verified after switching from runtime-only loading to the bundler
+plugins (`globalThis.__FEDERATION__.__INSTANCES__` shows the plugin-created `host_ember_*`
+instance being used).
 
 "React instance" was verified by identity of `React.createElement` across host and remote
 (`globalThis.__pocReact`, a POC-only diagnostic registered by each app). Namespace identity is
@@ -156,7 +179,5 @@ Things that were not obvious from the docs and cost time; each is handled in the
 
 - `memoryRoute` (remote with an in-memory router, host owns the URL). One prop away but out of
   scope for this POC.
-- Wiring `@module-federation/enhanced/webpack` / `@module-federation/vite` into the Ember builds.
-  Unnecessary while Ember shares nothing with the remotes.
 - Serving remotes from `vite preview` builds to the hosts (only `vite dev` remotes were exercised,
   though all remotes build cleanly with `mf-manifest.json`).

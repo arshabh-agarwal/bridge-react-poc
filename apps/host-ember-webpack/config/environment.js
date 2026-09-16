@@ -13,13 +13,10 @@ module.exports = function (environment) {
 
     APP: {},
 
-    // Consumed by the `remote-loader` service from @poc/bridge-ember.
+    // Consumed by the `remote-loader` service from @poc/bridge-ember. Remotes are declared in
+    // ember-cli-build.js (ModuleFederationPlugin); the name lets the service find that instance.
     moduleFederation: {
       name: 'host_ember_webpack',
-      remotes: [
-        { name: 'remote18', entry: 'http://localhost:3018/remoteEntry.js', type: 'module' },
-        { name: 'remote19', entry: 'http://localhost:3019/remoteEntry.js', type: 'module' },
-      ],
     },
   };
 

@@ -1,19 +1,26 @@
 import Service from '@ember/service';
 import { getOwner } from '@ember/application';
-import { createInstance } from '@module-federation/runtime';
+import { createInstance, getInstance } from '@module-federation/runtime';
 
 /**
- * Owns the Module Federation runtime instance for this Ember app and caches bridge providers.
+ * Resolves the Module Federation runtime instance for this Ember app and caches bridge providers.
  *
- * Remotes are read from `config/environment.js`:
+ * Two modes, selected by `config/environment.js`:
  *
- *   moduleFederation: {
- *     name: 'host_ember',
- *     remotes: [{ name: 'remote18', entry: 'http://localhost:3018/remoteEntry.js', type: 'module' }],
- *   }
+ * 1. Bundler plugin (default). Remotes are declared in the build config
+ *    (`@module-federation/enhanced/webpack` in ember-cli-build.js, or `@module-federation/vite`
+ *    in vite.config.mjs). The plugin initialises the runtime before the app boots; this service
+ *    looks that instance up by name.
  *
- * Ember shares nothing with the React remotes, so no bundler-level MF plugin is needed; the
- * runtime alone is enough to fetch and evaluate remote entries.
+ *      moduleFederation: { name: 'host_ember' }
+ *
+ * 2. Runtime only. If `remotes` is present the service creates its own instance and no bundler
+ *    plugin is required.
+ *
+ *      moduleFederation: {
+ *        name: 'host_ember',
+ *        remotes: [{ name: 'remote18', entry: 'http://localhost:3018/remoteEntry.js', type: 'module' }],
+ *      }
  */
 export default class RemoteLoaderService extends Service {
   _instance = null;
@@ -26,12 +33,24 @@ export default class RemoteLoaderService extends Service {
 
   get instance() {
     if (!this._instance) {
-      const { name, remotes = [], shared } = this.config;
-      this._instance = createInstance({
-        name: name || 'ember_host',
-        remotes,
-        shared,
-      });
+      const { name, remotes, shared } = this.config;
+      if (Array.isArray(remotes) && remotes.length) {
+        this._instance = createInstance({ name: name || 'ember_host', remotes, shared });
+      } else {
+        // Search the global registry (not just this module copy) so a runtime bundled by the
+        // webpack/vite plugin is found even if the addon resolved its own copy of the runtime.
+        this._instance =
+          (name && getInstance((inst) => inst.name === name)) ||
+          getInstance() ||
+          (globalThis.__FEDERATION__ && globalThis.__FEDERATION__.__INSTANCES__[0]) ||
+          null;
+        if (!this._instance) {
+          throw new Error(
+            '[bridge-ember] No Module Federation runtime instance found. Either wire the ' +
+              'bundler plugin with `remotes`, or set `moduleFederation.remotes` in config/environment.js.',
+          );
+        }
+      }
     }
     return this._instance;
   }
@@ -44,8 +63,8 @@ export default class RemoteLoaderService extends Service {
   loadProvider(remoteName, expose = 'export-app') {
     const id = `${remoteName}/${expose}`;
     if (!this._providers.has(id)) {
-      const promise = this.instance
-        .loadRemote(id)
+      const promise = Promise.resolve()
+        .then(() => this.instance.loadRemote(id))
         .then((mod) => {
           const factory = mod && (mod.default || mod);
           if (typeof factory !== 'function') {
