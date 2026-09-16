@@ -9,10 +9,26 @@ import {
   useRouterState,
 } from '@tanstack/react-router';
 import { Remote18App, Remote19App } from './remotes';
+import './styles.css';
 
 export interface HostContext {
   hostName: string;
 }
+
+type RemoteName = 'remote18' | 'remote19';
+
+const REMOTES: Record<RemoteName, { label: string; sub: string; App: typeof Remote18App }> = {
+  remote18: { label: 'React 18', sub: 'remote18 / react-router', App: Remote18App },
+  remote19: { label: 'React 19', sub: 'remote19 / react-router', App: Remote19App },
+};
+
+// One tab per route the remote owns. Tabs are host links into the remote's prefix; the
+// bridge-tanstack adapter forwards the resulting location change to the remote's router.
+const TABS = [
+  { label: 'Home', splat: '', match: (rest: string) => rest === '' },
+  { label: 'About', splat: 'about', match: (rest: string) => rest === 'about' },
+  { label: 'Items', splat: 'items/7', match: (rest: string) => rest.startsWith('items/') },
+];
 
 const rootRoute = createRootRouteWithContext<HostContext>()({
   component: RootLayout,
@@ -28,13 +44,13 @@ const indexRoute = createRoute({
 const remote18Route = createRoute({
   getParentRoute: () => rootRoute,
   path: '/remote18/$',
-  component: () => <Remote18App basename="/remote18" />,
+  component: () => <RemoteShell remote="remote18" />,
 });
 
 const remote19Route = createRoute({
   getParentRoute: () => rootRoute,
   path: '/remote19/$',
-  component: () => <Remote19App basename="/remote19" />,
+  component: () => <RemoteShell remote="remote19" />,
 });
 
 const routeTree = rootRoute.addChildren([indexRoute, remote18Route, remote19Route]);
@@ -49,52 +65,77 @@ export function createHostRouter(hostName: string) {
   });
 }
 
+function usePathname() {
+  return useRouterState({ select: (s) => s.location.pathname });
+}
+
 function RootLayout() {
   const { hostName } = rootRoute.useRouteContext();
-  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const pathname = usePathname();
 
   return (
-    <div style={{ fontFamily: 'system-ui, sans-serif', padding: 16 }}>
-      <header
-        style={{
-          display: 'flex',
-          gap: 16,
-          alignItems: 'baseline',
-          flexWrap: 'wrap',
-          borderBottom: '2px solid #0ea5e9',
-          paddingBottom: 8,
-        }}
-      >
-        <strong style={{ color: '#0ea5e9' }}>{hostName}</strong>
+    <div className="hg">
+      <header className="hg__header">
+        <strong>{hostName}</strong>
         <code>React {reactVersion}</code>
         <code>TanStack Router</code>
         <code data-testid="host-pathname">pathname={pathname}</code>
       </header>
 
-      <nav style={{ display: 'flex', gap: 12, margin: '12px 0', flexWrap: 'wrap' }}>
-        <Link to="/">Host home</Link>
-        <Link to="/remote18/$" params={{ _splat: '' }}>
-          remote18
+      <nav className="hg__nav" aria-label="Remotes">
+        <h2>Remotes</h2>
+        <Link to="/" activeProps={{}} className={pathname === '/' ? 'is-active' : undefined}>
+          Host home
         </Link>
-        <Link to="/remote18/$" params={{ _splat: 'about' }}>
-          remote18/about
-        </Link>
-        <Link to="/remote18/$" params={{ _splat: 'items/7' }}>
-          remote18/items/7
-        </Link>
-        <Link to="/remote19/$" params={{ _splat: '' }}>
-          remote19
-        </Link>
-        <Link to="/remote19/$" params={{ _splat: 'about' }}>
-          remote19/about
-        </Link>
-        <Link to="/remote19/$" params={{ _splat: 'items/7' }}>
-          remote19/items/7
-        </Link>
+        {(Object.keys(REMOTES) as RemoteName[]).map((name) => (
+          <Link
+            activeProps={{}}
+            key={name}
+            to={`/${name}/$` as '/remote18/$'}
+            params={{ _splat: '' }}
+            className={pathname.startsWith(`/${name}`) ? 'is-active' : undefined}
+          >
+            {REMOTES[name].label}
+            <span className="nav-sub">{REMOTES[name].sub}</span>
+          </Link>
+        ))}
       </nav>
 
-      <Outlet />
+      <main className="hg__main">
+        <Outlet />
+      </main>
+
+      <footer className="hg__footer">
+        Host owns the shell, side nav and tabs. Everything inside the dashed box is rendered by
+        the remote's own React and react-router.
+      </footer>
     </div>
+  );
+}
+
+function RemoteShell({ remote }: { remote: RemoteName }) {
+  const { App } = REMOTES[remote];
+  const basename = `/${remote}`;
+  const pathname = usePathname();
+  const rest = pathname.replace(basename, '').replace(/^\//, '');
+
+  return (
+    <>
+      <nav className="tabs" aria-label={`${remote} routes`}>
+        {TABS.map((tab) => (
+          <Link
+            activeProps={{}}
+            key={tab.label}
+            to={`${basename}/$` as '/remote18/$'}
+            params={{ _splat: tab.splat }}
+            className={tab.match(rest) ? 'is-active' : undefined}
+          >
+            {tab.label}
+          </Link>
+        ))}
+      </nav>
+      <App basename={basename} />
+    </>
   );
 }
 
@@ -102,7 +143,7 @@ function HostHome() {
   return (
     <div>
       <h1>Host home</h1>
-      <p>Routes under /remote18 and /remote19 are handed over to the remotes.</p>
+      <p>Pick a remote from the side nav. Each tab in the main area is one route owned by that remote.</p>
     </div>
   );
 }

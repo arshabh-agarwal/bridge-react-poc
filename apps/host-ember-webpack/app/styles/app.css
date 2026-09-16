@@ -1,34 +1,126 @@
+/* Holy grail layout shared by both Ember hosts. */
+* {
+  box-sizing: border-box;
+}
+
 body {
-  font-family: system-ui, sans-serif;
   margin: 0;
+  font-family: system-ui, sans-serif;
+  color: #18181b;
+  background: #fafafa;
 }
 
-.host {
-  padding: 16px;
+.hg {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  grid-template-rows: auto 1fr auto;
+  grid-template-areas:
+    'header header'
+    'nav main'
+    'footer footer';
 }
 
-.host__header {
+.hg__header {
+  grid-area: header;
   display: flex;
   gap: 16px;
   align-items: baseline;
   flex-wrap: wrap;
-  border-bottom: 2px solid #e04e39;
-  padding-bottom: 8px;
+  padding: 12px 20px;
+  background: #e04e39;
+  color: #fff;
 }
 
-.host__name {
-  color: #e04e39;
+.hg__header strong {
+  font-size: 16px;
 }
 
-.host__nav {
+.hg__header code {
+  background: rgba(255, 255, 255, 0.18);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.hg__nav {
+  grid-area: nav;
+  background: #fff;
+  border-right: 1px solid #e4e4e7;
+  padding: 16px 12px;
+}
+
+.hg__nav h2 {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #71717a;
+  margin: 0 8px 8px;
+}
+
+.hg__nav a {
+  display: block;
+  padding: 8px 12px;
+  border-radius: 6px;
+  color: #18181b;
+  text-decoration: none;
+}
+
+.hg__nav a:hover {
+  background: #f4f4f5;
+}
+
+.hg__nav a.active {
+  background: #fdecea;
+  color: #b3311f;
+  font-weight: 600;
+}
+
+.hg__nav .nav-sub {
+  font-size: 12px;
+  color: #71717a;
+  display: block;
+  font-weight: 400;
+}
+
+.hg__main {
+  grid-area: main;
+  padding: 20px;
+  min-width: 0;
+}
+
+.hg__footer {
+  grid-area: footer;
+  padding: 8px 20px;
+  font-size: 12px;
+  color: #71717a;
+  border-top: 1px solid #e4e4e7;
+  background: #fff;
+}
+
+.tabs {
   display: flex;
-  gap: 12px;
-  margin: 12px 0;
-  flex-wrap: wrap;
+  gap: 4px;
+  border-bottom: 2px solid #e4e4e7;
+  margin-bottom: 16px;
 }
 
-.host__nav .active {
-  font-weight: 700;
+.tabs a {
+  padding: 8px 14px;
+  margin-bottom: -2px;
+  border-bottom: 2px solid transparent;
+  color: #52525b;
+  text-decoration: none;
+}
+
+.tabs a:hover {
+  color: #18181b;
+}
+
+.tabs a.active {
+  color: #b3311f;
+  border-bottom-color: #e04e39;
+  font-weight: 600;
 }
 
 .remote-mount__error {

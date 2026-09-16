@@ -1,4 +1,4 @@
-/* Holy grail layout shared by both Ember hosts. */
+/* Holy grail layout shared by both React hosts. */
 * {
   box-sizing: border-box;
 }
@@ -28,7 +28,7 @@ body {
   align-items: baseline;
   flex-wrap: wrap;
   padding: 12px 20px;
-  background: #e04e39;
+  background: #0ea5e9;
   color: #fff;
 }
 
@@ -70,9 +70,9 @@ body {
   background: #f4f4f5;
 }
 
-.hg__nav a.active {
-  background: #fdecea;
-  color: #b3311f;
+.hg__nav a.is-active {
+  background: #e0f2fe;
+  color: #0369a1;
   font-weight: 600;
 }
 
@@ -80,7 +80,6 @@ body {
   font-size: 12px;
   color: #71717a;
   display: block;
-  font-weight: 400;
 }
 
 .hg__main {
@@ -117,14 +116,8 @@ body {
   color: #18181b;
 }
 
-.tabs a.active {
-  color: #b3311f;
-  border-bottom-color: #e04e39;
+.tabs a.is-active {
+  color: #0369a1;
+  border-bottom-color: #0ea5e9;
   font-weight: 600;
-}
-
-.remote-mount__error {
-  border: 1px solid #dc2626;
-  padding: 12px;
-  border-radius: 6px;
 }

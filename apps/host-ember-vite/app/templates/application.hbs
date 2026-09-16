@@ -1,20 +1,30 @@
-<div class="host">
-  <header class="host__header">
-    <strong class="host__name">host-ember-vite</strong>
+<div class="hg">
+  <header class="hg__header">
+    <strong>host-ember-vite</strong>
     <code>Ember {{this.emberVersion}}</code>
     <code>Embroider + Vite</code>
     <code data-testid="host-pathname">pathname={{this.router.currentURL}}</code>
   </header>
 
-  <nav class="host__nav">
+  <nav class="hg__nav" aria-label="Remotes">
+    <h2>Remotes</h2>
     <LinkTo @route="index">Host home</LinkTo>
-    <LinkTo @route="remote18">remote18</LinkTo>
-    <LinkTo @route="remote18.catchall" @model="about">remote18/about</LinkTo>
-    <LinkTo @route="remote18.catchall" @model="items/7">remote18/items/7</LinkTo>
-    <LinkTo @route="remote19">remote19</LinkTo>
-    <LinkTo @route="remote19.catchall" @model="about">remote19/about</LinkTo>
-    <LinkTo @route="remote19.catchall" @model="items/7">remote19/items/7</LinkTo>
+    <LinkTo @route="remote18">
+      React 18
+      <span class="nav-sub">remote18 / react-router</span>
+    </LinkTo>
+    <LinkTo @route="remote19">
+      React 19
+      <span class="nav-sub">remote19 / react-router</span>
+    </LinkTo>
   </nav>
 
-  {{outlet}}
+  <main class="hg__main">
+    {{outlet}}
+  </main>
+
+  <footer class="hg__footer">
+    Host owns the shell, side nav and tabs. Everything inside the dashed box is rendered by the
+    remote's own React and react-router.
+  </footer>
 </div>
