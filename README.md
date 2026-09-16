@@ -165,8 +165,3 @@ link, back, forward, exit via `onHostNavigate`. Every step matched dev behaviour
 isolation was identical, and the console was completely silent (the dev-only react-router
 basename warning does not exist in production builds). The Ember hosts confirmed they were using
 the plugin-created `host_ember_webpack` / `host_ember_vite` runtime instances.
-
-## Not covered
-
-- Deploying to real origins / CDNs. Remote URLs are hardcoded to `localhost` ports in the host
-  build configs.
