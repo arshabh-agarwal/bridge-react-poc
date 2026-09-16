@@ -1,0 +1,14 @@
+{
+  "name": "dashboard",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Static page showing all four hosts side by side in iframes",
+  "scripts": {
+    "dev": "serve -l 4000 --no-clipboard .",
+    "preview": "serve -l 4000 --no-clipboard .",
+    "build": "echo 'dashboard is static; nothing to build'"
+  },
+  "devDependencies": {
+    "serve": "^14.2.0"
+  }
+}

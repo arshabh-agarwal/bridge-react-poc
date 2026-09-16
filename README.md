@@ -14,6 +14,7 @@ the remote and the remote owning every route under it.
 | `apps/host-react19` | React 19.3, TanStack Router, Vite + `@module-federation/vite` | 4019 |
 | `apps/host-ember-webpack` | Ember 3.28, Embroider 3.x + webpack, `@module-federation/enhanced/webpack` | 4200 |
 | `apps/host-ember-vite` | Ember 3.28, Embroider 4.x + `@embroider/vite`, `@module-federation/vite` | 4201 |
+| `apps/dashboard` | Static page showing all four hosts side by side in iframes | 4000 |
 
 | Package | Purpose |
 | --- | --- |
@@ -32,6 +33,10 @@ pnpm dev          # all six apps
 ```
 
 Or per group: `pnpm dev:remotes`, `pnpm dev:react-hosts`, `pnpm dev:ember-hosts`.
+
+With everything up, http://localhost:4000 shows all four hosts in a 2x2 grid of iframes. The
+header buttons navigate every frame to the same path (useful for comparing hosts side by side);
+each frame also has its own path box. `?path=/remote19/items/42` sets the initial deep link.
 After editing `packages/bridge-ember/src`, rerun `pnpm --filter @poc/bridge-ember build` and
 restart the Ember dev servers (they do not watch the addon's `dist/`).
 Remotes also run standalone at their own port (basename `/`). `pnpm build` builds everything.

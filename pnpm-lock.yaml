@@ -8,6 +8,12 @@ importers:
 
   .: {}
 
+  apps/dashboard:
+    devDependencies:
+      serve:
+        specifier: ^14.2.0
+        version: 14.2.6
+
   apps/host-ember-vite:
     devDependencies:
       '@babel/core':

@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bridge POC dashboard</title>
+    <style>
+      :root {
+        color-scheme: light;
+        font-family: system-ui, sans-serif;
+      }
+      body {
+        margin: 0;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        background: #f4f4f5;
+      }
+      header {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        flex-wrap: wrap;
+        padding: 10px 16px;
+        background: #18181b;
+        color: #fafafa;
+      }
+      header strong {
+        margin-right: 8px;
+      }
+      header .hint {
+        opacity: 0.6;
+        font-size: 12px;
+      }
+      button {
+        font: inherit;
+        font-size: 13px;
+        padding: 4px 10px;
+        border-radius: 6px;
+        border: 1px solid #52525b;
+        background: #27272a;
+        color: #fafafa;
+        cursor: pointer;
+      }
+      button:hover {
+        background: #3f3f46;
+      }
+      button.r18 {
+        border-color: #38bdf8;
+      }
+      button.r19 {
+        border-color: #a78bfa;
+      }
+      main {
+        flex: 1;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: 1fr 1fr;
+        gap: 8px;
+        padding: 8px;
+        min-height: 0;
+      }
+      .panel {
+        display: flex;
+        flex-direction: column;
+        background: #fff;
+        border-radius: 8px;
+        overflow: hidden;
+        border: 1px solid #e4e4e7;
+        min-height: 0;
+      }
+      .panel-bar {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        padding: 6px 10px;
+        border-bottom: 1px solid #e4e4e7;
+        font-size: 13px;
+      }
+      .panel-bar .name {
+        font-weight: 700;
+      }
+      .panel-bar .stack {
+        color: #71717a;
+      }
+      .panel-bar form {
+        display: flex;
+        gap: 6px;
+        margin-left: auto;
+        flex: 1;
+        max-width: 420px;
+      }
+      .panel-bar input {
+        flex: 1;
+        font: inherit;
+        font-size: 13px;
+        padding: 3px 8px;
+        border: 1px solid #d4d4d8;
+        border-radius: 6px;
+      }
+      .panel-bar button {
+        background: #fff;
+        color: #18181b;
+        border-color: #d4d4d8;
+      }
+      .panel-bar button:hover {
+        background: #f4f4f5;
+      }
+      iframe {
+        flex: 1;
+        border: 0;
+        width: 100%;
+        min-height: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <strong>Bridge POC: all hosts</strong>
+      <span class="hint">Navigate every host to:</span>
+      <button data-all="/">Host home</button>
+      <button class="r18" data-all="/remote18">remote18</button>
+      <button class="r18" data-all="/remote18/about">remote18/about</button>
+      <button class="r18" data-all="/remote18/items/7">remote18/items/7</button>
+      <button class="r19" data-all="/remote19">remote19</button>
+      <button class="r19" data-all="/remote19/about">remote19/about</button>
+      <button class="r19" data-all="/remote19/items/7">remote19/items/7</button>
+      <button data-reload-all>Reload all</button>
+      <span class="hint" style="margin-left: auto">
+        Frames are cross-origin, so their current URL cannot be read from here; use the path box
+        per frame to deep-link.
+      </span>
+    </header>
+
+    <main id="grid"></main>
+
+    <script>
+      const hosts = [
+        { name: 'host-react18', stack: 'React 18 + TanStack Router', origin: 'http://localhost:4018' },
+        { name: 'host-react19', stack: 'React 19 + TanStack Router', origin: 'http://localhost:4019' },
+        { name: 'host-ember-webpack', stack: 'Ember 3.28 + Embroider/webpack', origin: 'http://localhost:4200' },
+        { name: 'host-ember-vite', stack: 'Ember 3.28 + Embroider/Vite', origin: 'http://localhost:4201' },
+      ];
+
+      const initialPath = new URLSearchParams(location.search).get('path') || '/remote18/items/42';
+      const grid = document.getElementById('grid');
+      const frames = [];
+
+      for (const host of hosts) {
+        const panel = document.createElement('section');
+        panel.className = 'panel';
+        panel.innerHTML = `
+          <div class="panel-bar">
+            <span class="name">${host.name}</span>
+            <span class="stack">${host.stack}</span>
+            <span class="stack">${host.origin}</span>
+            <form>
+              <input name="path" value="${initialPath}" spellcheck="false" />
+              <button type="submit">Go</button>
+              <button type="button" data-reload>Reload</button>
+              <button type="button" data-open>Open</button>
+            </form>
+          </div>
+          <iframe src="${host.origin}${initialPath}" title="${host.name}"></iframe>
+        `;
+        grid.appendChild(panel);
+
+        const iframe = panel.querySelector('iframe');
+        const form = panel.querySelector('form');
+        const input = form.elements.path;
+        const go = (path) => {
+          input.value = path;
+          iframe.src = host.origin + path;
+        };
+        form.addEventListener('submit', (e) => {
+          e.preventDefault();
+          go(input.value.startsWith('/') ? input.value : '/' + input.value);
+        });
+        panel.querySelector('[data-reload]').addEventListener('click', () => (iframe.src = iframe.src));
+        panel.querySelector('[data-open]').addEventListener('click', () =>
+          window.open(host.origin + input.value, '_blank'),
+        );
+        frames.push({ go, iframe });
+      }
+
+      document.querySelectorAll('[data-all]').forEach((btn) =>
+        btn.addEventListener('click', () => frames.forEach((f) => f.go(btn.dataset.all))),
+      );
+      document
+        .querySelector('[data-reload-all]')
+        .addEventListener('click', () => frames.forEach((f) => (f.iframe.src = f.iframe.src)));
+    </script>
+  </body>
+</html>
