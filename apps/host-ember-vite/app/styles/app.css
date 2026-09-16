@@ -1,0 +1,38 @@
+body {
+  font-family: system-ui, sans-serif;
+  margin: 0;
+}
+
+.host {
+  padding: 16px;
+}
+
+.host__header {
+  display: flex;
+  gap: 16px;
+  align-items: baseline;
+  flex-wrap: wrap;
+  border-bottom: 2px solid #e04e39;
+  padding-bottom: 8px;
+}
+
+.host__name {
+  color: #e04e39;
+}
+
+.host__nav {
+  display: flex;
+  gap: 12px;
+  margin: 12px 0;
+  flex-wrap: wrap;
+}
+
+.host__nav .active {
+  font-weight: 700;
+}
+
+.remote-mount__error {
+  border: 1px solid #dc2626;
+  padding: 12px;
+  border-radius: 6px;
+}

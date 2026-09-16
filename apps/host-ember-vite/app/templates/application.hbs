@@ -1,0 +1,20 @@
+<div class="host">
+  <header class="host__header">
+    <strong class="host__name">host-ember-vite</strong>
+    <code>Ember {{this.emberVersion}}</code>
+    <code>Embroider + Vite</code>
+    <code data-testid="host-pathname">pathname={{this.router.currentURL}}</code>
+  </header>
+
+  <nav class="host__nav">
+    <LinkTo @route="index">Host home</LinkTo>
+    <LinkTo @route="remote18">remote18</LinkTo>
+    <LinkTo @route="remote18.catchall" @model="about">remote18/about</LinkTo>
+    <LinkTo @route="remote18.catchall" @model="items/7">remote18/items/7</LinkTo>
+    <LinkTo @route="remote19">remote19</LinkTo>
+    <LinkTo @route="remote19.catchall" @model="about">remote19/about</LinkTo>
+    <LinkTo @route="remote19.catchall" @model="items/7">remote19/items/7</LinkTo>
+  </nav>
+
+  {{outlet}}
+</div>
