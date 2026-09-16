@@ -29,9 +29,9 @@ Every host mounts both remotes at `/remote18/*` and `/remote19/*`.
 
 Host chrome is the header and left nav. The dashed box is the remote: its tabs, routes, and a live `useEffect` probe so you can see whether React is shared or isolated.
 
-<video src="docs/demo.mp4" controls width="100%">
-  <a href="docs/demo.mp4">Watch the demo</a>
-</video>
+[Watch the demo](docs/demo.mp4)
+
+<video src="docs/demo.mp4" controls width="100%"></video>
 
 ## Run
 
