@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useRef, type ComponentType, type ReactNode } from 'react';
+import { useCallback, useEffect, type ComponentType, type ReactNode } from 'react';
 import { createRemoteAppComponent } from '@module-federation/bridge-react/base';
-import { useLocation, useRouter } from '@tanstack/react-router';
+import { useRouter } from '@tanstack/react-router';
 
 export interface CreateTanStackRemoteAppOptions<T = Record<string, unknown>> {
   /** Usually `() => loadRemote('remote/export-app')`. */
@@ -21,21 +21,53 @@ export interface TanStackRemoteAppProps {
 }
 
 /**
+ * Patch history.pushState and history.replaceState to dispatch a synthetic PopStateEvent
+ * after every URL change. This is how the host and remote routers stay in sync — both
+ * listen to popstate, and the browser only fires it natively on Back/Forward.
+ *
+ * This is the same pattern used by single-spa (13.9k stars). Their patchedUpdateState()
+ * wraps pushState/replaceState globally and dispatches PopStateEvent after each call.
+ * See: https://github.com/single-spa/single-spa/blob/main/src/navigation/navigation-events.js
+ */
+function patchHistoryIfNeeded() {
+  if ((window as any).__mfe_history_patched) return;
+  (window as any).__mfe_history_patched = true;
+
+  const originalPushState = history.pushState.bind(history);
+  const originalReplaceState = history.replaceState.bind(history);
+
+  history.pushState = function (...args: Parameters<typeof history.pushState>) {
+    const urlBefore = window.location.href;
+    const result = originalPushState(...args);
+    const urlAfter = window.location.href;
+    if (urlBefore !== urlAfter) {
+      window.dispatchEvent(new PopStateEvent('popstate', { state: window.history.state }));
+    }
+    return result;
+  };
+
+  history.replaceState = function (...args: Parameters<typeof history.replaceState>) {
+    const urlBefore = window.location.href;
+    const result = originalReplaceState(...args);
+    const urlAfter = window.location.href;
+    if (urlBefore !== urlAfter) {
+      window.dispatchEvent(new PopStateEvent('popstate', { state: window.history.state }));
+    }
+    return result;
+  };
+}
+
+/**
  * Host-side adapter for mounting a bridge-react remote inside a TanStack Router host.
  *
- * `@module-federation/bridge-react` (default entry) derives `basename` and dispatches route
- * changes via react-router hooks. TanStack hosts have no react-router context, so we use the
- * `base` entry and supply that glue here:
- *   - `basename` is passed explicitly by the route that mounts the remote,
- *   - host-driven navigation is forwarded to the remote by dispatching a synthetic `popstate`
- *     (the remote's BrowserRouter only listens to popstate),
- *   - `onHostNavigate` lets the remote leave its prefix through the host router.
+ * On mount, patches history.pushState/replaceState to dispatch synthetic popstate events.
+ * This keeps the host and remote routers in sync automatically — no custom callback
+ * plumbing needed. The only explicit coordination is `onHostNavigate`, which lets the
+ * remote leave its prefix through the host router.
  */
 export function createTanStackRemoteApp<T = Record<string, unknown>>(
   options: CreateTanStackRemoteAppOptions<T>,
 ) {
-  // bridge-react resolves its own @types/react; casting avoids false mismatches when the
-  // consuming host is on a different React major than the types bridge-react was built against.
   const Remote = createRemoteAppComponent<any, any>({
     loader: options.loader,
     loading: options.loading as any,
@@ -45,7 +77,10 @@ export function createTanStackRemoteApp<T = Record<string, unknown>>(
 
   function TanStackRemoteApp({ basename, ...rest }: TanStackRemoteAppProps) {
     const router = useRouter();
-    const location = useLocation();
+
+    useEffect(() => {
+      patchHistoryIfNeeded();
+    }, []);
 
     const onHostNavigate = useCallback(
       (path: string) => {
@@ -53,17 +88,6 @@ export function createTanStackRemoteApp<T = Record<string, unknown>>(
       },
       [router],
     );
-
-    // Host -> remote route sync. TanStack patches history.pushState, so it also observes the
-    // remote's own navigations; the extra popstate in that case is a harmless no-op for the remote.
-    const lastPathname = useRef(location.pathname);
-    useEffect(() => {
-      if (lastPathname.current === location.pathname) return;
-      lastPathname.current = location.pathname;
-      if (location.pathname.startsWith(basename)) {
-        window.dispatchEvent(new PopStateEvent('popstate', { state: window.history.state }));
-      }
-    }, [location.pathname, basename]);
 
     return <Remote basename={basename} onHostNavigate={onHostNavigate} {...rest} />;
   }

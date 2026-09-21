@@ -18,7 +18,7 @@ the remote and the remote owning every route under it.
 
 | Package | Purpose |
 | --- | --- |
-| `packages/remote-app` | The React Router app both remotes expose (`/`, `/about`, `/items/:id`, 404) |
+| `packages/remote-app` | The React Router app both remotes expose (`/`, `/about`, `/items/:id`, 404), plus `useHostNavigate` hook and `<HostLink>` component |
 | `packages/host-react-app` | The TanStack Router app both React hosts run |
 | `packages/bridge-tanstack` | Host adapter for TanStack hosts: `createTanStackRemoteApp()` |
 | `packages/bridge-ember` | Host adapter for Ember hosts (v2 addon): `remote-loader` service + `<RemoteMount>` |
@@ -77,50 +77,51 @@ sequenceDiagram
   participant Remote as Remote react-router
 
   Host->>Adapter: match /remote18/*
+  Adapter->>Adapter: patch history.pushState / replaceState
   Adapter->>Provider: loadRemote remote18/export-app
   Adapter->>Provider: render with basename /remote18
   Provider->>Remote: createBrowserRouter with that basename
   Note over Remote: owns everything under /remote18
-  Host->>Adapter: host navigates to /remote18/about
-  Adapter->>Remote: dispatch synthetic popstate
-  Remote->>Adapter: onRouteChange after an internal Link
-  Adapter->>Host: Ember replaceWith - TanStack already sees pushState
-  Remote->>Adapter: onHostNavigate to host home
+  Host->>Host: host navigates to /remote18/about (pushState)
+  Note over Host,Remote: history patch dispatches synthetic popstate
+  Remote->>Remote: React Router hears popstate, matches /about
+  Remote->>Remote: user clicks Link to /items/5 (pushState)
+  Note over Host,Remote: history patch dispatches synthetic popstate
+  Host->>Host: host router hears popstate, stays on splat route
+  Remote->>Adapter: useHostNavigate to host home
   Adapter->>Host: navigate home and unmount remote
   Adapter->>Provider: destroy the remote root
 ```
 
+- Each adapter patches `history.pushState` and `history.replaceState` on mount to dispatch a
+  synthetic `PopStateEvent` after every URL change. This is the same pattern used by
+  [single-spa](https://github.com/single-spa/single-spa/blob/main/src/navigation/navigation-events.js).
+  A global guard (`window.__mfe_history_patched`) prevents double-patching if the adapter
+  mounts and unmounts multiple times.
+- With the patch in place, all route sync between host and remote happens automatically through
+  `popstate` — no custom callbacks needed. The only explicit coordination is `onHostNavigate`,
+  which the remote calls (via `useHostNavigate()` hook or `<HostLink>` component) when it needs
+  to navigate to a path it doesn't own.
 - The remote receives `basename` from `render()` and builds its own `createBrowserRouter`.
   It never hardcodes the prefix, so the same build mounts at any path.
 - The host only declares a splat/wildcard route. Adding routes to the remote needs no host change.
-- Both routers read `window.location`; sync is a prefix split plus two nudges:
-  host-initiated navigation inside the prefix is forwarded as a synthetic `popstate`
-  (react-router only listens to that), and the remote reports its own navigations via
-  `onRouteChange` so hosts that do not observe `pushState` (Ember) can catch up.
-- `onHostNavigate(path)` is how the remote leaves its prefix; it goes through the host router.
 
 ## Adapters
 
+Both adapters patch `history.pushState` and `history.replaceState` on mount (with a shared
+global guard). The patch dispatches a synthetic `PopStateEvent` after every URL change, which
+is how both routers stay in sync. Beyond the patch, each adapter is minimal:
+
 `packages/bridge-tanstack` (one file): wraps `createRemoteAppComponent` from
-`@module-federation/bridge-react/base`, passes `basename`, dispatches `popstate` on TanStack
-location changes, injects `onHostNavigate`.
+`@module-federation/bridge-react/base`, passes `basename`, injects `onHostNavigate`.
 
-`packages/bridge-ember` (v2 addon, ~100 lines): `remote-loader` service resolves the
+`packages/bridge-ember` (v2 addon): `remote-loader` service resolves the
 `@module-federation/runtime` instance and caches providers; `<RemoteMount @remote @basename
-@props>` calls `render` on `did-insert`, `destroy` on `will-destroy`, forwards `routeDidChange`
-as `popstate`, and resyncs Ember on `onRouteChange` with a `replaceWith`.
+@props>` calls `render` on `did-insert`, `destroy` on `will-destroy`, injects `onHostNavigate`.
 
-The service supports two modes, chosen by `config/environment.js`:
-
-- **Bundler plugin (used by both Ember apps).** Remotes are declared in the build:
-  `ModuleFederationPlugin` from `@module-federation/enhanced/webpack` inside Embroider's
-  `packagerOptions.webpackConfig.plugins` (`apps/host-ember-webpack/ember-cli-build.js`), and
-  `federation()` from `@module-federation/vite` in `apps/host-ember-vite/vite.config.mjs`. The
-  plugin initialises the runtime before Ember boots; the service finds that instance with
-  `getInstance(inst => inst.name === config.moduleFederation.name)`.
-- **Runtime only.** If `config.moduleFederation.remotes` is set, the service calls
-  `createInstance()` itself and no bundler plugin is needed. Useful for hosts whose build you
-  cannot touch.
+The service finds the MF runtime instance created by the bundler plugin
+(`@module-federation/enhanced/webpack` or `@module-federation/vite`) via
+`getInstance(inst => inst.name === config.moduleFederation.name)`.
 
 The webpack host points its remotes at the Vite remotes' `mf-manifest.json` rather than
 `remoteEntry.js`: the manifest carries `remoteEntry.type: 'module'`, which is how a webpack host
@@ -131,7 +132,8 @@ since Ember shares nothing with React.
 
 Checked manually in the browser on 2026-09-16, dev servers, all six apps running.
 Columns: deep link on cold load (`/remoteNN/items/42`), host nav into a remote sub-route,
-remote internal link, swap to the other remote, browser back, "Back to host home" (destroy).
+remote internal link, swap to the other remote, browser back, "Back to host home" via
+`<HostLink>` or `useHostNavigate()` (destroy).
 
 | Host | Remote | React instance | Deep link | Host nav | Remote nav | Swap | Back | Exit |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -161,7 +163,7 @@ misleading here because every app gets its own `loadShare` wrapper module.
 The same walk was repeated against `pnpm build` output served with `pnpm preview` (remotes via
 `vite preview`, so `remoteEntry.js` and `mf-manifest.json` come from `dist/`). On each of the
 four hosts: deep link into one remote, host nav into the other remote's sub-route, remote-internal
-link, back, forward, exit via `onHostNavigate`. Every step matched dev behaviour, React sharing /
+link, back, forward, exit via `useHostNavigate`. Every step matched dev behaviour, React sharing /
 isolation was identical, and the console was completely silent (the dev-only react-router
 basename warning does not exist in production builds). The Ember hosts confirmed they were using
 the plugin-created `host_ember_webpack` / `host_ember_vite` runtime instances.

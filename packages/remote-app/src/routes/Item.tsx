@@ -1,8 +1,10 @@
 import { useNavigate, useParams } from 'react-router';
+import { useHostNavigate } from '../navigation';
 
 export function Item() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const hostNavigate = useHostNavigate();
   const n = Number(id) || 0;
   return (
     <div>
@@ -13,6 +15,9 @@ export function Item() {
       </button>{' '}
       <button type="button" onClick={() => navigate(-1)}>
         Back (history)
+      </button>{' '}
+      <button type="button" onClick={() => hostNavigate('/')}>
+        Host home (useHostNavigate)
       </button>
     </div>
   );

@@ -1,4 +1,5 @@
 import { Link, NavLink, Outlet, useLocation } from 'react-router';
+import { HostLink } from '../navigation';
 import { useRemoteContext } from '../context';
 import { HooksProbe } from '../HooksProbe';
 
@@ -19,7 +20,7 @@ const tabStyle = (isActive: boolean) => ({
 });
 
 export function Layout() {
-  const { basename, remoteName, reactVersion, onHostNavigate } = useRemoteContext();
+  const { basename, remoteName, reactVersion } = useRemoteContext();
   const location = useLocation();
 
   return (
@@ -69,11 +70,7 @@ export function Layout() {
         <span style={{ color: '#71717a' }}>Demo links:</span>
         <Link to="/items/42">Item 42</Link>
         <Link to="/does-not-exist">Broken link</Link>
-        {onHostNavigate && (
-          <button type="button" onClick={() => onHostNavigate('/')}>
-            Back to host home
-          </button>
-        )}
+        <HostLink to="/">Back to host home</HostLink>
       </div>
 
       <HooksProbe />
