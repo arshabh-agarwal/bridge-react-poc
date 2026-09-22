@@ -1,5 +1,5 @@
 {
-  "name": "@poc/bridge-ember",
+  "name": "@poc/remote-app-ember-adapter",
   "version": "0.0.0",
   "private": true,
   "description": "Host-side adapter for mounting @module-federation/bridge-react remotes in Ember apps",
@@ -45,7 +45,7 @@
     "type": "addon",
     "main": "addon-main.cjs",
     "app-js": {
-      "./components/remote-mount.js": "./dist/_app_/components/remote-mount.js",
+      "./components/remote-app-mount.js": "./dist/_app_/components/remote-app-mount.js",
       "./services/remote-loader.js": "./dist/_app_/services/remote-loader.js"
     }
   }

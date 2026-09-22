@@ -2,8 +2,8 @@ import { useCallback, useEffect, type ComponentType, type ReactNode } from 'reac
 import { createRemoteAppComponent } from '@module-federation/bridge-react/base';
 import { useRouter } from '@tanstack/react-router';
 
-export interface CreateTanStackRemoteAppOptions<T = Record<string, unknown>> {
-  /** Usually `() => loadRemote('remote/export-app')`. */
+export interface CreateRemoteAppOptions<T = Record<string, unknown>> {
+  /** Usually `() => import('provider_my_feature')`. */
   loader: () => Promise<T>;
   loading: ReactNode;
   fallback: ComponentType<{ error: Error }>;
@@ -11,7 +11,7 @@ export interface CreateTanStackRemoteAppOptions<T = Record<string, unknown>> {
   export?: keyof T;
 }
 
-export interface TanStackRemoteAppProps {
+export interface RemoteAppProps {
   /** URL prefix the host hands over to the remote, e.g. "/remote18". */
   basename: string;
   className?: string;
@@ -65,8 +65,8 @@ function patchHistoryIfNeeded() {
  * plumbing needed. The only explicit coordination is `onHostNavigate`, which lets the
  * remote leave its prefix through the host router.
  */
-export function createTanStackRemoteApp<T = Record<string, unknown>>(
-  options: CreateTanStackRemoteAppOptions<T>,
+export function createRemoteApp<T = Record<string, unknown>>(
+  options: CreateRemoteAppOptions<T>,
 ) {
   const Remote = createRemoteAppComponent<any, any>({
     loader: options.loader,
@@ -75,7 +75,7 @@ export function createTanStackRemoteApp<T = Record<string, unknown>>(
     export: options.export as any,
   });
 
-  function TanStackRemoteApp({ basename, ...rest }: TanStackRemoteAppProps) {
+  function RemoteApp({ basename, ...rest }: RemoteAppProps) {
     const router = useRouter();
 
     useEffect(() => {
@@ -92,6 +92,6 @@ export function createTanStackRemoteApp<T = Record<string, unknown>>(
     return <Remote basename={basename} onHostNavigate={onHostNavigate} {...rest} />;
   }
 
-  TanStackRemoteApp.displayName = 'TanStackRemoteApp';
-  return TanStackRemoteApp;
+  RemoteApp.displayName = 'RemoteApp';
+  return RemoteApp;
 }

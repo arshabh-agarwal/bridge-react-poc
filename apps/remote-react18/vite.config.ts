@@ -8,12 +8,12 @@ const REACT_RANGE = '^18.0.0';
 export default defineConfig({
   plugins: [
     federation({
-      name: 'remote18',
+      name: 'provider_remote18',
       filename: 'remoteEntry.js',
       manifest: true,
       dts: false,
       exposes: {
-        './export-app': './src/export-app.tsx',
+        '.': './src/main.ts',
       },
       // Non-singleton + requiredVersion: reuse the host's React only when it satisfies the
       // range, otherwise load this remote's own copy. That is what isolates React 18 from

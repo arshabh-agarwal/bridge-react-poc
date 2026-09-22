@@ -43,7 +43,7 @@ function patchHistoryIfNeeded() {
 /**
  * Mounts a bridge-react remote into a DOM node owned by Ember.
  *
- *   <RemoteMount @remote="remote18" @basename="/remote18" @props={{hash userId="42"}} />
+ *   <RemoteAppMount @remote="provider_remote18" @basename="/remote18" @props={{hash userId="42"}} />
  *
  * On mount, patches history.pushState/replaceState to dispatch synthetic popstate events.
  * This keeps the host and remote routers in sync automatically — when the remote calls
@@ -53,7 +53,7 @@ function patchHistoryIfNeeded() {
  * The only explicit coordination is `onHostNavigate`, which lets the remote leave its
  * prefix through Ember's router.
  */
-export default class RemoteMount extends Component {
+export default class RemoteAppMount extends Component {
   @service remoteLoader;
   @service router;
 
@@ -95,7 +95,7 @@ export default class RemoteMount extends Component {
       if (this.torndown) return;
       this.status = 'ready';
     } catch (error) {
-      console.error(`[bridge-ember] failed to mount ${this.args.remote}`, error);
+      console.error(`[remote-app-ember-adapter] failed to mount ${this.args.remote}`, error);
       this.error = error;
       this.status = 'error';
     }

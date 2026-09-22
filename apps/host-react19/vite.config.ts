@@ -11,14 +11,14 @@ export default defineConfig({
       name: 'host_react19',
       dts: false,
       remotes: {
-        remote18: {
+        provider_remote18: {
           type: 'module',
-          name: 'remote18',
+          name: 'provider_remote18',
           entry: 'http://localhost:3018/remoteEntry.js',
         },
-        remote19: {
+        provider_remote19: {
           type: 'module',
-          name: 'remote19',
+          name: 'provider_remote19',
           entry: 'http://localhost:3019/remoteEntry.js',
         },
       },

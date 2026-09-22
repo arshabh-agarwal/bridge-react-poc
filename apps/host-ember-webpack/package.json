@@ -21,7 +21,7 @@
     "@glimmer/component": "^1.1.2",
     "@module-federation/enhanced": "^2.9.0",
     "@glimmer/tracking": "^1.1.2",
-    "@poc/bridge-ember": "workspace:*",
+    "@poc/remote-app-ember-adapter": "workspace:*",
     "broccoli-asset-rev": "^3.0.0",
     "ember-auto-import": "^2.6.3",
     "ember-cli": "~4.12.3",

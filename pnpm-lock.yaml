@@ -61,9 +61,9 @@ importers:
       '@module-federation/vite':
         specifier: ^1.22.0
         version: 1.22.0(typescript@5.9.3)(vite@7.3.6(@types/node@22.20.3)(jiti@2.4.2)(terser@5.51.2)(yaml@2.9.1))
-      '@poc/bridge-ember':
+      '@poc/remote-app-ember-adapter':
         specifier: workspace:*
-        version: link:../../packages/bridge-ember
+        version: link:../../packages/remote-app-ember-adapter
       '@rollup/plugin-babel':
         specifier: ^7.0.0
         version: 7.1.0(@babel/core@7.29.7)(@types/babel__core@7.20.5)(rollup@4.63.3)
@@ -127,9 +127,9 @@ importers:
       '@module-federation/enhanced':
         specifier: ^2.9.0
         version: 2.9.0(@rspack/core@2.2.5(@module-federation/runtime-tools@2.9.0))(typescript@5.9.3)(webpack@5.111.0(postcss@8.5.28))
-      '@poc/bridge-ember':
+      '@poc/remote-app-ember-adapter':
         specifier: workspace:*
-        version: link:../../packages/bridge-ember
+        version: link:../../packages/remote-app-ember-adapter
       broccoli-asset-rev:
         specifier: ^3.0.0
         version: 3.0.0
@@ -175,12 +175,12 @@ importers:
       '@module-federation/bridge-react':
         specifier: ^2.9.0
         version: 2.9.0(react-dom@18.3.1(react@18.3.1))(react-router@7.18.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)
-      '@poc/bridge-tanstack':
-        specifier: workspace:*
-        version: link:../../packages/bridge-tanstack
       '@poc/host-react-app':
         specifier: workspace:*
         version: link:../../packages/host-react-app
+      '@poc/remote-app-tanstack-adapter':
+        specifier: workspace:*
+        version: link:../../packages/remote-app-tanstack-adapter
       '@tanstack/react-router':
         specifier: ^1.170.0
         version: 1.170.36(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -215,12 +215,12 @@ importers:
       '@module-federation/bridge-react':
         specifier: ^2.9.0
         version: 2.9.0(react-dom@19.3.0(react@19.3.0))(react-router@7.18.4(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(react@19.3.0)
-      '@poc/bridge-tanstack':
-        specifier: workspace:*
-        version: link:../../packages/bridge-tanstack
       '@poc/host-react-app':
         specifier: workspace:*
         version: link:../../packages/host-react-app
+      '@poc/remote-app-tanstack-adapter':
+        specifier: workspace:*
+        version: link:../../packages/remote-app-tanstack-adapter
       '@tanstack/react-router':
         specifier: ^1.170.0
         version: 1.170.36(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
@@ -324,7 +324,56 @@ importers:
         specifier: ^7.0.0
         version: 7.3.6(@types/node@22.20.3)(jiti@2.4.2)(terser@5.51.2)(yaml@2.9.1)
 
-  packages/bridge-ember:
+  packages/host-react-app:
+    dependencies:
+      '@poc/remote-app-tanstack-adapter':
+        specifier: workspace:*
+        version: link:../remote-app-tanstack-adapter
+    devDependencies:
+      '@module-federation/bridge-react':
+        specifier: ^2.9.0
+        version: 2.9.0(react-dom@19.3.0(react@19.3.0))(react-router@7.18.4(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(react@19.3.0)
+      '@tanstack/react-router':
+        specifier: ^1.170.0
+        version: 1.170.36(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      '@types/react':
+        specifier: ^19.0.0
+        version: 19.3.0
+      '@types/react-dom':
+        specifier: ^19.0.0
+        version: 19.3.0(@types/react@19.3.0)
+      react:
+        specifier: ^19.0.0
+        version: 19.3.0
+      react-dom:
+        specifier: ^19.0.0
+        version: 19.3.0(react@19.3.0)
+      typescript:
+        specifier: ^5.9.0
+        version: 5.9.3
+
+  packages/remote-app:
+    devDependencies:
+      '@tanstack/react-router':
+        specifier: ^1.0.0
+        version: 1.170.36(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      '@types/react':
+        specifier: ^19.0.0
+        version: 19.3.0
+      '@types/react-dom':
+        specifier: ^19.0.0
+        version: 19.3.0(@types/react@19.3.0)
+      react:
+        specifier: ^19.0.0
+        version: 19.3.0
+      react-dom:
+        specifier: ^19.0.0
+        version: 19.3.0(react@19.3.0)
+      typescript:
+        specifier: ^5.9.0
+        version: 5.9.3
+
+  packages/remote-app-ember-adapter:
     dependencies:
       '@ember/render-modifiers':
         specifier: ^2.1.0 || ^3.0.0 || ^4.0.0
@@ -358,63 +407,14 @@ importers:
         specifier: ^4.30.0
         version: 4.63.3
 
-  packages/bridge-tanstack:
+  packages/remote-app-tanstack-adapter:
     devDependencies:
       '@module-federation/bridge-react':
         specifier: ^2.9.0
         version: 2.9.0(react-dom@19.3.0(react@19.3.0))(react-router@7.18.4(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(react@19.3.0)
       '@tanstack/react-router':
         specifier: ^1.170.0
-        version: 1.170.36(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
-      '@types/react':
-        specifier: ^19.0.0
-        version: 19.3.0
-      '@types/react-dom':
-        specifier: ^19.0.0
-        version: 19.3.0(@types/react@19.3.0)
-      react:
-        specifier: ^19.0.0
-        version: 19.3.0
-      react-dom:
-        specifier: ^19.0.0
-        version: 19.3.0(react@19.3.0)
-      typescript:
-        specifier: ^5.9.0
-        version: 5.9.3
-
-  packages/host-react-app:
-    dependencies:
-      '@poc/bridge-tanstack':
-        specifier: workspace:*
-        version: link:../bridge-tanstack
-    devDependencies:
-      '@module-federation/bridge-react':
-        specifier: ^2.9.0
-        version: 2.9.0(react-dom@19.3.0(react@19.3.0))(react-router@7.18.4(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(react@19.3.0)
-      '@tanstack/react-router':
-        specifier: ^1.170.0
-        version: 1.170.36(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
-      '@types/react':
-        specifier: ^19.0.0
-        version: 19.3.0
-      '@types/react-dom':
-        specifier: ^19.0.0
-        version: 19.3.0(@types/react@19.3.0)
-      react:
-        specifier: ^19.0.0
-        version: 19.3.0
-      react-dom:
-        specifier: ^19.0.0
-        version: 19.3.0(react@19.3.0)
-      typescript:
-        specifier: ^5.9.0
-        version: 5.9.3
-
-  packages/remote-app:
-    devDependencies:
-      '@tanstack/react-router':
-        specifier: ^1.0.0
-        version: 1.170.36(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+        version: 1.170.38(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       '@types/react':
         specifier: ^19.0.0
         version: 19.3.0

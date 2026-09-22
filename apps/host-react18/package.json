@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@module-federation/bridge-react": "^2.9.0",
-    "@poc/bridge-tanstack": "workspace:*",
+    "@poc/remote-app-tanstack-adapter": "workspace:*",
     "@poc/host-react-app": "workspace:*",
     "@tanstack/react-router": "^1.170.0",
     "react": "^18.3.1",

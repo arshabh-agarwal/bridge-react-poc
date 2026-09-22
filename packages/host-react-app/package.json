@@ -9,7 +9,7 @@
     ".": "./src/index.tsx"
   },
   "dependencies": {
-    "@poc/bridge-tanstack": "workspace:*"
+    "@poc/remote-app-tanstack-adapter": "workspace:*"
   },
   "peerDependencies": {
     "@module-federation/bridge-react": "^2.9.0",

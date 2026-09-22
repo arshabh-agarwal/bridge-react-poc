@@ -6,8 +6,7 @@ function Root(props: AppProps) {
   return <App {...props} remoteName="remote19" />;
 }
 
-// Exposed as `remote19/export-app`. The bridge turns this into a provider with
-// render({ dom, basename, ...props }) / destroy({ dom }).
+// The bridge turns this into a provider with render({ dom, basename, ...props }) / destroy({ dom }).
 export default createBridgeComponent<AppProps>({
   rootComponent: Root,
   render: createDeferredUnmountRender(createRoot) as any,

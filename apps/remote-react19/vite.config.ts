@@ -8,12 +8,12 @@ const REACT_RANGE = '^19.0.0';
 export default defineConfig({
   plugins: [
     federation({
-      name: 'remote19',
+      name: 'provider_remote19',
       filename: 'remoteEntry.js',
       manifest: true,
       dts: false,
       exposes: {
-        './export-app': './src/export-app.tsx',
+        '.': './src/main.ts',
       },
       // Non-singleton + requiredVersion: reuse the host's React only when it satisfies the
       // range, otherwise load this remote's own copy. That is what isolates React 19 from

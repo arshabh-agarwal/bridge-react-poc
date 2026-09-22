@@ -13,7 +13,7 @@ module.exports = function (environment) {
 
     APP: {},
 
-    // Consumed by the `remote-loader` service from @poc/bridge-ember. Remotes are declared in
+    // Consumed by the `remote-loader` service from @poc/remote-app-ember-adapter. Remotes are
     // vite.config.mjs (@module-federation/vite); the name lets the service find that instance.
     moduleFederation: {
       name: 'host_ember_vite',

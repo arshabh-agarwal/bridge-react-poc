@@ -1,5 +1,5 @@
 // Virtual modules provided by @module-federation/vite for the configured remotes.
-declare module 'remote18/export-app' {
+declare module 'provider_remote18' {
   const provider: () => {
     render(info: { dom: HTMLElement; basename?: string; [key: string]: unknown }): Promise<void>;
     destroy(info: { dom: HTMLElement; moduleName?: string }): void;
@@ -7,7 +7,7 @@ declare module 'remote18/export-app' {
   export default provider;
 }
 
-declare module 'remote19/export-app' {
+declare module 'provider_remote19' {
   const provider: () => {
     render(info: { dom: HTMLElement; basename?: string; [key: string]: unknown }): Promise<void>;
     destroy(info: { dom: HTMLElement; moduleName?: string }): void;

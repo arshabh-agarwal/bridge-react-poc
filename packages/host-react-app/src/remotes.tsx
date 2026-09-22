@@ -1,5 +1,5 @@
 /// <reference path="./remotes.d.ts" />
-import { createTanStackRemoteApp } from '@poc/bridge-tanstack';
+import { createRemoteApp } from '@poc/remote-app-tanstack-adapter';
 
 function Loading({ name }: { name: string }) {
   return <p style={{ opacity: 0.6 }}>Loading {name}...</p>;
@@ -14,16 +14,16 @@ function Failed({ error }: { error: Error }) {
   );
 }
 
-// `remote18/export-app` and `remote19/export-app` are virtual modules resolved by
+// `provider_remote18` and `provider_remote19` are virtual modules resolved by
 // @module-federation/vite from the host's `remotes` config.
-export const Remote18App = createTanStackRemoteApp({
-  loader: () => import('remote18/export-app'),
+export const Remote18App = createRemoteApp({
+  loader: () => import('provider_remote18'),
   loading: <Loading name="remote18" />,
   fallback: Failed,
 });
 
-export const Remote19App = createTanStackRemoteApp({
-  loader: () => import('remote19/export-app'),
+export const Remote19App = createRemoteApp({
+  loader: () => import('provider_remote19'),
   loading: <Loading name="remote19" />,
   fallback: Failed,
 });

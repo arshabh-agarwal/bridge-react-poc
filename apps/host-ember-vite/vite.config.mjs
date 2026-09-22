@@ -12,21 +12,21 @@ export default defineConfig({
       extensions,
     }),
     // Module Federation host. The plugin injects a host-init script into index.html that
-    // initialises the MF runtime before the Ember app boots; @poc/bridge-ember's `remote-loader`
-    // service picks that instance up by name.
+    // initialises the MF runtime before the Ember app boots; @poc/remote-app-ember-adapter's
+    // `remote-loader` service picks that instance up by name.
     federation({
       name: 'host_ember_vite',
       dts: false,
       dev: { disableDynamicRemoteTypeHints: true },
       remotes: {
-        remote18: {
+        provider_remote18: {
           type: 'module',
-          name: 'remote18',
+          name: 'provider_remote18',
           entry: 'http://localhost:3018/remoteEntry.js',
         },
-        remote19: {
+        provider_remote19: {
           type: 'module',
-          name: 'remote19',
+          name: 'provider_remote19',
           entry: 'http://localhost:3019/remoteEntry.js',
         },
       },

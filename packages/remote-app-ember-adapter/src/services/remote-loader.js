@@ -46,7 +46,7 @@ export default class RemoteLoaderService extends Service {
           null;
         if (!this._instance) {
           throw new Error(
-            '[bridge-ember] No Module Federation runtime instance found. Either wire the ' +
+            '[remote-app-ember-adapter] No Module Federation runtime instance found. Either wire the ' +
               'bundler plugin with `remotes`, or set `moduleFederation.remotes` in config/environment.js.',
           );
         }
@@ -56,12 +56,12 @@ export default class RemoteLoaderService extends Service {
   }
 
   /**
-   * Loads `<remote>/<expose>` and calls the bridge factory once, returning the provider
+   * Loads the remote's provider and calls the bridge factory once, returning the provider
    * ({ render, destroy }). The provider keeps its own root-per-DOM map, so sharing one
    * provider across mounts is safe.
    */
-  loadProvider(remoteName, expose = 'export-app') {
-    const id = `${remoteName}/${expose}`;
+  loadProvider(remoteName, expose = '.') {
+    const id = expose === '.' ? remoteName : `${remoteName}/${expose}`;
     if (!this._providers.has(id)) {
       const promise = Promise.resolve()
         .then(() => this.instance.loadRemote(id))

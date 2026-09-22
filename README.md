@@ -21,8 +21,8 @@ router-agnostic.
 | --- | --- |
 | `packages/remote-app` | The TanStack Router app both remotes expose (`/`, `/about`, `/items/$id`, 404), plus `useHostNavigate` hook and `<HostLink>` component |
 | `packages/host-react-app` | The TanStack Router app both React hosts run |
-| `packages/bridge-tanstack` | Host adapter for TanStack hosts: `createTanStackRemoteApp()` |
-| `packages/bridge-ember` | Host adapter for Ember hosts (v2 addon): `remote-loader` service + `<RemoteMount>` |
+| `packages/remote-app-tanstack-adapter` | Host adapter for TanStack hosts: `createRemoteApp()` |
+| `packages/remote-app-ember-adapter` | Host adapter for Ember hosts (v2 addon): `remote-loader` service + `<RemoteAppMount>` |
 
 Every host mounts both remotes at `/remote18/*` and `/remote19/*`.
 
@@ -45,7 +45,7 @@ Ember 3.28 webpack host with the same remote:
 ## Run
 
 ```sh
-pnpm install      # also builds the bridge-ember addon (rollup) via its prepare script
+pnpm install      # also builds the remote-app-ember-adapter addon (rollup) via its prepare script
 pnpm dev          # all six apps
 ```
 
@@ -54,7 +54,7 @@ Or per group: `pnpm dev:remotes`, `pnpm dev:react-hosts`, `pnpm dev:ember-hosts`
 With everything up, http://localhost:4000 shows all four hosts in a 2x2 grid of iframes. The
 header buttons navigate every frame to the same path (useful for comparing hosts side by side);
 each frame also has its own path box. `?path=/remote19/items/42` sets the initial deep link.
-After editing `packages/bridge-ember/src`, rerun `pnpm --filter @poc/bridge-ember build` and
+After editing `packages/remote-app-ember-adapter/src`, rerun `pnpm --filter @poc/remote-app-ember-adapter build` and
 restart the Ember dev servers (they do not watch the addon's `dist/`).
 Remotes also run standalone at their own port (basename `/`). `pnpm build` builds everything.
 
@@ -79,7 +79,7 @@ sequenceDiagram
 
   Host->>Adapter: match /remote18/*
   Adapter->>Adapter: patch history.pushState / replaceState
-  Adapter->>Provider: loadRemote remote18/export-app
+  Adapter->>Provider: loadRemote provider_remote18
   Adapter->>Provider: render with basename /remote18
   Provider->>Remote: createRouter with basepath /remote18
   Note over Remote: owns everything under /remote18
@@ -113,11 +113,11 @@ Both adapters patch `history.pushState` and `history.replaceState` on mount (wit
 global guard). The patch dispatches a synthetic `PopStateEvent` after every URL change, which
 is how both routers stay in sync. Beyond the patch, each adapter is minimal:
 
-`packages/bridge-tanstack` (one file): wraps `createRemoteAppComponent` from
+`packages/remote-app-tanstack-adapter` (one file): wraps `createRemoteAppComponent` from
 `@module-federation/bridge-react/base`, passes `basename`, injects `onHostNavigate`.
 
-`packages/bridge-ember` (v2 addon): `remote-loader` service resolves the
-`@module-federation/runtime` instance and caches providers; `<RemoteMount @remote @basename
+`packages/remote-app-ember-adapter` (v2 addon): `remote-loader` service resolves the
+`@module-federation/runtime` instance and caches providers; `<RemoteAppMount @remote @basename
 @props>` calls `render` on `did-insert`, `destroy` on `will-destroy`, injects `onHostNavigate`.
 
 The service finds the MF runtime instance created by the bundler plugin
