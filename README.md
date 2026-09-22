@@ -51,6 +51,16 @@ pnpm dev          # all six apps
 
 Or per group: `pnpm dev:remotes`, `pnpm dev:react-hosts`, `pnpm dev:ember-hosts`.
 
+## E2E tests
+
+Playwright tests cover the verification matrix: 4 hosts x 2 remotes x 6 scenarios (deep link,
+host nav, remote nav, cross-remote, back/forward, exit) = 48 test cases.
+
+```sh
+pnpm dev              # start all dev servers (must be running)
+pnpm test:e2e         # run all 48 tests
+```
+
 With everything up, http://localhost:4000 shows all four hosts in a 2x2 grid of iframes. The
 header buttons navigate every frame to the same path (useful for comparing hosts side by side);
 each frame also has its own path box. `?path=/remote19/items/42` sets the initial deep link.

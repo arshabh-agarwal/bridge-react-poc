@@ -6,7 +6,9 @@
     "node": ">=20"
   },
   "pnpm": {
-    "onlyBuiltDependencies": ["esbuild"]
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
   },
   "scripts": {
     "dev": "pnpm -r --parallel --filter './apps/*' dev",
@@ -14,6 +16,10 @@
     "dev:react-hosts": "pnpm -r --parallel --filter './apps/host-react*' dev",
     "dev:ember-hosts": "pnpm -r --parallel --filter './apps/host-ember*' dev",
     "build": "pnpm -r --filter './packages/*' --filter './apps/*' build",
-    "preview": "pnpm -r --parallel --filter './apps/*' preview"
+    "preview": "pnpm -r --parallel --filter './apps/*' preview",
+    "test:e2e": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0"
   }
 }
