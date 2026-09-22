@@ -78,10 +78,11 @@ export function App({
     registerReactInstance(remoteName, React);
     console.log(`[${remoteName}] mounted with React ${reactVersion}, basename=${basename}`);
     return () => {
+      router.history.destroy();
       unregisterReactInstance(remoteName);
       console.log(`[${remoteName}] unmounted`);
     };
-  }, [remoteName, basename]);
+  }, [remoteName, basename, router]);
 
   return (
     <RemoteContext.Provider value={ctx}>
