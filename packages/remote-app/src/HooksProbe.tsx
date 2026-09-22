@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useLocation } from 'react-router';
+import { useLocation } from '@tanstack/react-router';
 import { useRemoteContext } from './context';
 import { describeReactShare } from './instances';
 

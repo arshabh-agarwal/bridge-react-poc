@@ -1,23 +1,32 @@
-import { Link, NavLink, Outlet, useLocation } from 'react-router';
+import { Link, Outlet, useLocation } from '@tanstack/react-router';
 import { HostLink } from '../navigation';
 import { useRemoteContext } from '../context';
 import { HooksProbe } from '../HooksProbe';
 
 // One tab per route this remote owns. The host knows nothing about these.
-const TABS = [
-  { label: 'Home', to: '/', end: true },
-  { label: 'About', to: '/about', end: true },
-  { label: 'Items', to: '/items/7', end: false, matchPrefix: '/items' },
+const TABS: readonly { label: string; to: string; exact: boolean; matchPrefix?: string }[] = [
+  { label: 'Home', to: '/', exact: true },
+  { label: 'About', to: '/about', exact: true },
+  { label: 'Items', to: '/items/7', exact: false, matchPrefix: '/items' },
 ];
 
-const tabStyle = (isActive: boolean) => ({
+const activeTabStyle = {
   padding: '8px 14px',
   marginBottom: -2,
-  borderBottom: `2px solid ${isActive ? '#7c3aed' : 'transparent'}`,
-  color: isActive ? '#6d28d9' : '#52525b',
-  fontWeight: isActive ? 600 : 400,
+  borderBottom: '2px solid #7c3aed',
+  color: '#6d28d9',
+  fontWeight: 600,
   textDecoration: 'none',
-});
+};
+
+const inactiveTabStyle = {
+  padding: '8px 14px',
+  marginBottom: -2,
+  borderBottom: '2px solid transparent',
+  color: '#52525b',
+  fontWeight: 400,
+  textDecoration: 'none',
+};
 
 export function Layout() {
   const { basename, remoteName, reactVersion } = useRemoteContext();
@@ -50,18 +59,23 @@ export function Layout() {
         style={{ display: 'flex', gap: 4, borderBottom: '2px solid #e4e4e7', margin: '12px 0' }}
       >
         {TABS.map((tab) => {
-          const active = (isActive: boolean) =>
-            isActive || (!!tab.matchPrefix && location.pathname.startsWith(tab.matchPrefix));
+          // TanStack Router's Link doesn't have NavLink's isActive render prop.
+          // Compute active state from the current pathname instead.
+          const isActive = tab.matchPrefix
+            ? location.pathname.startsWith(tab.matchPrefix)
+            : tab.exact
+              ? location.pathname === tab.to
+              : location.pathname.startsWith(tab.to);
+
           return (
-            <NavLink
+            <Link
               key={tab.label}
               to={tab.to}
-              end={tab.end}
-              className={({ isActive }) => (active(isActive) ? 'active' : '')}
-              style={({ isActive }) => tabStyle(active(isActive))}
+              className={isActive ? 'active' : ''}
+              style={isActive ? activeTabStyle : inactiveTabStyle}
             >
               {tab.label}
-            </NavLink>
+            </Link>
           );
         })}
       </nav>

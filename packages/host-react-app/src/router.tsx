@@ -18,8 +18,8 @@ export interface HostContext {
 type RemoteName = 'remote18' | 'remote19';
 
 const REMOTES: Record<RemoteName, { label: string; sub: string; App: typeof Remote18App }> = {
-  remote18: { label: 'React 18', sub: 'remote18 / react-router', App: Remote18App },
-  remote19: { label: 'React 19', sub: 'remote19 / react-router', App: Remote19App },
+  remote18: { label: 'React 18', sub: 'remote18 / tanstack-router', App: Remote18App },
+  remote19: { label: 'React 19', sub: 'remote19 / tanstack-router', App: Remote19App },
 };
 
 const rootRoute = createRootRouteWithContext<HostContext>()({

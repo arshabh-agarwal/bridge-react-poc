@@ -26,7 +26,7 @@ export default defineConfig({
     react(),
   ],
   resolve: {
-    dedupe: ['react', 'react-dom', 'react-router'],
+    dedupe: ['react', 'react-dom', '@tanstack/react-router'],
   },
   build: {
     target: 'chrome89',

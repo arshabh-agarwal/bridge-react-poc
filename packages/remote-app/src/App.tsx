@@ -1,7 +1,13 @@
 import * as React from 'react';
 import { useEffect, useMemo, version as reactVersion } from 'react';
 import { registerReactInstance, unregisterReactInstance } from './instances';
-import { createBrowserRouter, RouterProvider, type RouteObject } from 'react-router';
+import {
+  createRootRoute,
+  createRoute,
+  createRouter,
+  Outlet,
+  RouterProvider,
+} from '@tanstack/react-router';
 import { RemoteContext, type RemoteContextValue } from './context';
 import { Layout } from './routes/Layout';
 import { Home } from './routes/Home';
@@ -18,18 +24,37 @@ export interface AppProps {
   onHostNavigate?: (path: string) => void;
 }
 
-const routes: RouteObject[] = [
-  {
-    path: '/',
-    element: <Layout />,
-    children: [
-      { index: true, element: <Home /> },
-      { path: 'about', element: <About /> },
-      { path: 'items/:id', element: <Item /> },
-      { path: '*', element: <NotFound /> },
-    ],
-  },
-];
+// --- Route tree (mirrors the React Router config this replaces) ---
+
+const rootRoute = createRootRoute({
+  component: Layout,
+});
+
+const indexRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/',
+  component: Home,
+});
+
+const aboutRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/about',
+  component: About,
+});
+
+export const itemRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/items/$id',
+  component: Item,
+});
+
+const notFoundRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '$',
+  component: NotFound,
+});
+
+const routeTree = rootRoute.addChildren([indexRoute, aboutRoute, itemRoute, notFoundRoute]);
 
 export function App({
   basename = '/',
@@ -39,7 +64,10 @@ export function App({
   registerReactInstance(remoteName, React);
 
   // The remote owns everything under `basename`. Recreate the router only if the prefix changes.
-  const router = useMemo(() => createBrowserRouter(routes, { basename }), [basename]);
+  const router = useMemo(
+    () => createRouter({ routeTree, basepath: basename, defaultPreload: false }),
+    [basename],
+  );
 
   const ctx = useMemo<RemoteContextValue>(
     () => ({ basename, remoteName, reactVersion, onHostNavigate }),

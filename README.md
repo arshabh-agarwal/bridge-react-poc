@@ -1,15 +1,16 @@
 # Bridge React POC: 4 hosts x 2 remotes
 
-Proof of concept for `@module-federation/bridge-react`: React Router remotes mounted into hosts
-that do not use React Router (TanStack Router, Ember), with the host handing a URL prefix over to
-the remote and the remote owning every route under it.
+Proof of concept for `@module-federation/bridge-react`: TanStack Router remotes mounted into hosts
+(TanStack Router, Ember), with the host handing a URL prefix over to the remote and the remote
+owning every route under it. Both hosts and remotes use TanStack Router; the bridge layer is
+router-agnostic.
 
 ## Apps
 
 | App | Stack | Port |
 | --- | --- | --- |
-| `apps/remote-react18` | React 18.3, react-router v7, Vite + `@module-federation/vite`, `bridge-react/v18` | 3018 |
-| `apps/remote-react19` | React 19.3, react-router v7, Vite + `@module-federation/vite`, `bridge-react/v19` | 3019 |
+| `apps/remote-react18` | React 18.3, TanStack Router, Vite + `@module-federation/vite`, `bridge-react/v18` | 3018 |
+| `apps/remote-react19` | React 19.3, TanStack Router, Vite + `@module-federation/vite`, `bridge-react/v19` | 3019 |
 | `apps/host-react18` | React 18.3, TanStack Router, Vite + `@module-federation/vite` | 4018 |
 | `apps/host-react19` | React 19.3, TanStack Router, Vite + `@module-federation/vite` | 4019 |
 | `apps/host-ember-webpack` | Ember 3.28, Embroider 3.x + webpack, `@module-federation/enhanced/webpack` | 4200 |
@@ -18,7 +19,7 @@ the remote and the remote owning every route under it.
 
 | Package | Purpose |
 | --- | --- |
-| `packages/remote-app` | The React Router app both remotes expose (`/`, `/about`, `/items/:id`, 404), plus `useHostNavigate` hook and `<HostLink>` component |
+| `packages/remote-app` | The TanStack Router app both remotes expose (`/`, `/about`, `/items/$id`, 404), plus `useHostNavigate` hook and `<HostLink>` component |
 | `packages/host-react-app` | The TanStack Router app both React hosts run |
 | `packages/bridge-tanstack` | Host adapter for TanStack hosts: `createTanStackRemoteApp()` |
 | `packages/bridge-ember` | Host adapter for Ember hosts (v2 addon): `remote-loader` service + `<RemoteMount>` |
@@ -74,17 +75,17 @@ sequenceDiagram
   participant Host as Host router
   participant Adapter as Host adapter
   participant Provider as bridge-react
-  participant Remote as Remote react-router
+  participant Remote as Remote TanStack Router
 
   Host->>Adapter: match /remote18/*
   Adapter->>Adapter: patch history.pushState / replaceState
   Adapter->>Provider: loadRemote remote18/export-app
   Adapter->>Provider: render with basename /remote18
-  Provider->>Remote: createBrowserRouter with that basename
+  Provider->>Remote: createRouter with basepath /remote18
   Note over Remote: owns everything under /remote18
   Host->>Host: host navigates to /remote18/about (pushState)
   Note over Host,Remote: history patch dispatches synthetic popstate
-  Remote->>Remote: React Router hears popstate, matches /about
+  Remote->>Remote: TanStack Router hears popstate, matches /about
   Remote->>Remote: user clicks Link to /items/5 (pushState)
   Note over Host,Remote: history patch dispatches synthetic popstate
   Host->>Host: host router hears popstate, stays on splat route
@@ -102,8 +103,8 @@ sequenceDiagram
   `popstate` — no custom callbacks needed. The only explicit coordination is `onHostNavigate`,
   which the remote calls (via `useHostNavigate()` hook or `<HostLink>` component) when it needs
   to navigate to a path it doesn't own.
-- The remote receives `basename` from `render()` and builds its own `createBrowserRouter`.
-  It never hardcodes the prefix, so the same build mounts at any path.
+- The remote receives `basename` from `render()` and builds its own `createRouter` with that
+  value as `basepath`. It never hardcodes the prefix, so the same build mounts at any path.
 - The host only declares a splat/wildcard route. Adding routes to the remote needs no host change.
 
 ## Adapters
@@ -164,6 +165,5 @@ The same walk was repeated against `pnpm build` output served with `pnpm preview
 `vite preview`, so `remoteEntry.js` and `mf-manifest.json` come from `dist/`). On each of the
 four hosts: deep link into one remote, host nav into the other remote's sub-route, remote-internal
 link, back, forward, exit via `useHostNavigate`. Every step matched dev behaviour, React sharing /
-isolation was identical, and the console was completely silent (the dev-only react-router
-basename warning does not exist in production builds). The Ember hosts confirmed they were using
+isolation was identical, and the console was completely silent. The Ember hosts confirmed they were using
 the plugin-created `host_ember_webpack` / `host_ember_vite` runtime instances.
