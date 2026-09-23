@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useEffect, useMemo, version as reactVersion } from 'react';
+import { useEffect, useMemo, useRef, version as reactVersion } from 'react';
 import { registerReactInstance, unregisterReactInstance } from './instances';
 import {
   createRootRoute,
@@ -22,6 +22,13 @@ export interface AppProps {
   remoteName?: string;
   /** Callback for leaving the remote's URL prefix. Provided by the host adapter. */
   onHostNavigate?: (path: string) => void;
+  /**
+   * Called with the full URL whenever the remote navigates internally (PUSH or REPLACE).
+   * Hosts whose routers don't observe pushState (e.g. Ember) use this to keep their own
+   * state in sync. Not called for BACK/FORWARD/GO — those fire native popstate, which
+   * the host router already hears.
+   */
+  onRouteChange?: (url: string) => void;
 }
 
 // --- Route tree (mirrors the React Router config this replaces) ---
@@ -60,6 +67,7 @@ export function App({
   basename = '/',
   remoteName = 'remote',
   onHostNavigate,
+  onRouteChange,
 }: AppProps) {
   registerReactInstance(remoteName, React);
 
@@ -83,6 +91,28 @@ export function App({
       console.log(`[${remoteName}] unmounted`);
     };
   }, [remoteName, basename, router]);
+
+  // Notify the host when the remote navigates internally (PUSH or REPLACE).
+  // Hosts that monkey-patch pushState (TanStack Router) don't need this — they detect URL
+  // changes directly. Hosts that only listen to popstate (Ember) pass an onRouteChange
+  // callback to keep their router state in sync.
+  //
+  // The callback is deferred to a microtask because TanStack Router notifies subscribers
+  // synchronously *before* the deferred flush() that calls win.history.pushState. Calling
+  // onRouteChange synchronously would trigger Ember's replaceState before TanStack's own
+  // pushState, corrupting the history stack. By queueing a microtask from within the
+  // subscriber, it runs after flush() (which was queued earlier in the same tick).
+  const lastUrl = useRef(window.location.pathname + window.location.search + window.location.hash);
+  useEffect(() => {
+    if (!onRouteChange) return;
+    return router.history.subscribe(({ location, action }) => {
+      if (action.type !== 'PUSH' && action.type !== 'REPLACE') return;
+      const url = location.href;
+      if (url === lastUrl.current) return;
+      lastUrl.current = url;
+      queueMicrotask(() => onRouteChange(url));
+    });
+  }, [router, onRouteChange]);
 
   return (
     <RemoteContext.Provider value={ctx}>
